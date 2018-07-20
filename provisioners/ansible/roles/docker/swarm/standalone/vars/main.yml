@@ -1,0 +1,44 @@
+---
+dns_setup: false
+dns_nameservers: ['8.8.8.8', '8.8.4.4']
+dns_remove_resolvconf: true
+dns_domain: "hpcc.ttu.edu"
+dns_searchs:
+  - "{{dns_domain}}"
+
+
+#Sometimes you need to reinstall glibc-common to have all the loacles installed on your machine
+#set it true, if you want to re-install it
+Reinstall_glibc_common: false
+
+#set it true, if you want to set the system locale
+Set_locale: false
+
+#change it to the locale you want to set on the target machine
+locale: 'en_US.utf8'
+
+
+
+#docker repo address
+Docker_repo_address: "https://download.docker.com/linux/centos/docker-ce.repo"
+
+#set it true, if you want to install specific version of docker-ce
+Docker_version: true
+
+#specifiy the version of docker-ce you want to install (Note: be sure that
+#docker_version: true first)
+Docker_CE_version: '17.03.1.ce-1.el7.centos.x86_64'
+
+
+
+#set the name of the overlay network here
+overlay_network_name: simulation-network
+
+#set the network IP for the overlay network here
+overlay_network_IP: 172.23.0.0
+
+#set the netmask for the overlay network here (Only CIDR accepted)
+overlay_network_netmask: 16
+
+#set the gateway for the overlay network here
+overlay_network_gateway: 172.23.0.1

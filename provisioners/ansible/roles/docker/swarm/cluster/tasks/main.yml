@@ -1,0 +1,49 @@
+---
+# tasks file for ansible-docker-swarm
+
+- include_tasks: debian.yml
+  when: ansible_os_family == "Debian"
+  tags:
+   - debian  
+
+- include_tasks: redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- include_tasks: pre-reqs.yml
+
+- name: "Confirm ALL OK signal file exists"
+  stat: 
+    path: "{{ all_tasks_ok }}"
+  register: all_tasks_ok_file
+
+- include_tasks: api.main.yml
+  when: >
+        inventory_hostname not in groups[docker_swarm_workers_ansible_group] and
+        all_tasks_ok_file.stat.exists == False
+  tags:
+   - api
+   - docker-api
+
+- include_tasks: api.secure.posttasks.yml
+  when: >
+        all_tasks_ok_file.stat.exists == False
+  tags:
+   - swarm_posttasks   
+
+- include_tasks: cluster.yml
+  tags:
+   - cluster
+
+- include_tasks: networks.yml
+  when: >
+        docker_swarm_config_networks and
+        docker_swarm_networks is defined
+
+- include_tasks: settings.yml
+  when: docker_swarm_config_settings
+
+- include_tasks: ufw.yml
+  when: ansible_os_family == "Debian"
+  tags:
+   - firewall
+

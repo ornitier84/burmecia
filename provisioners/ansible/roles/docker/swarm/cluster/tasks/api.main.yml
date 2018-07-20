@@ -1,0 +1,9 @@
+---
+# main.yml
+
+- include_tasks: api.secure.pretasks.yml
+- include_tasks: api.secure.generate_ca.yml
+- include_tasks: api.secure.generate_server_certs.yml
+- include_tasks: api.secure.generate_client_certs.yml
+- include_tasks: modify-docker-daemon.yml
+  become: True

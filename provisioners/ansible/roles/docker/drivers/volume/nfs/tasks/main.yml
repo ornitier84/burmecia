@@ -1,0 +1,26 @@
+---
+- name: Create {{docker_volume_netshare_location}} before downloading docker-volume-netshare
+  file:
+    path: "{{docker_volume_netshare_location}}"
+    state: directory
+    mode: "{{docker_volume_netshare_location_mode}}"
+
+- name: Download docker-volume-netshare
+  get_url:
+    url: "{{docker_volume_netshare_download_url}}"
+    dest: "{{docker_volume_netshare_location}}/{{docker_volume_netshare_filename}}"
+    mode: "{{docker_volume_netshare_file_mode}}"
+    force: yes
+
+- name: Add nfs.spec when plugin type = nfs
+  template:
+    src: "{{ docker_volume_netshare_nfs_spec_template }}"
+    dest: "{{docker_volume_netshare_nfs_spec_file_location}}/nfs.spec"
+    owner: root
+    group: root
+    mode: 0644
+  when: docker_volume_netshare_nfs_spec_file_location|default("") != ""
+
+- name: Include run_as_service.yml if defined
+  include: create_systemd_unit.yml
+  when: (docker_volume_netshare_systemd_unit) and (ansible_service_mgr == "systemd")

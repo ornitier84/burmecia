@@ -1,0 +1,27 @@
+---
+- name: install the latest version of UFW
+  package:
+    name: ufw
+    state: latest
+    
+- name: Turn on UFW
+  ufw: >
+    state=enabled
+    policy=allow
+
+- name: Apply Firewall Allow Rules for Trusted Networks
+  ufw:
+    rule: allow
+    src: '{{ item }}'
+  with_items:
+    - 10.10.1.0/24
+    - 172.16.3.0/24
+    - 192.168.121.0/24
+    - 172.17.0.0/24
+
+- name: Set to deny incoming requests by default
+  ufw: >
+    default=deny
+
+
+- set_fact: ufw_enabled=True

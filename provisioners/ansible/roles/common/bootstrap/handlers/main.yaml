@@ -1,0 +1,12 @@
+- name: debian.restart_ssh
+  service: name=ssh state=restarted
+  when: ansible_distribution == "Debian"
+
+- name: rhel.restart_ssh
+  service: name=sshd state=restarted
+  when: ansible_distribution == "RedHat"  
+
+- name: yum-clean-metadata
+  command: yum clean metadata
+  args:
+    warn: no

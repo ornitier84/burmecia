@@ -1,0 +1,14 @@
+---
+- name: debian | updating apt-cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  become: true
+
+- name: debian | installing must-haves
+  apt:
+    name: "{{ item }}"
+    state: present
+  become: true
+  with_items:
+    - 'git'

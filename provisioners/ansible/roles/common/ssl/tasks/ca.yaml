@@ -1,0 +1,8 @@
+- name: Generate ca-key.pem
+  command: "openssl genrsa -aes256 -passout file:{{ passphrase_file }} -out {{ temp_path }}/ca-key.pem 4096"
+
+- name: Generate ca certificate   
+  shell: |
+    openssl req -new -x509 -days 365 -key {{ temp_path }}/ca-key.pem -sha256 \ 
+    -out {{ temp_path }}/ca.pem -passin file:{{ passphrase_file }} \ 
+    -subj '/C={{ country }}/ST={{state }}>/L={{ locality }}/O={{ organization }}/CN={{ ansible_hostname }}'

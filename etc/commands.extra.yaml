@@ -1,0 +1,59 @@
+---
+definitions:
+  commands:
+    group:
+      name: group
+      synopsis: Calls vagrant up against specified node group
+      execute: |
+        $no_provision = false
+        if ARGV[-1] == '--no-provision'
+          ARGV.delete("--no-provision")
+          $no_provision = true
+        end
+        if ARGV[-2] == "up"
+          node_group = ARGV[-1]
+          $node_group = node_group
+        end
+    edit:
+      name: edit
+      synopsis: Calls your preferred text editor for modifying project files
+      execute: |
+        if ARGV[-1] == "playbook"
+          machine = ARGV[-2]
+          file_obj = "./#{$vagrant.local_data_dir}/machines/#{machine}/provisioners/ansible/dynamic_playbook.yaml"
+        else
+          file_obj = ARGV[-1]
+        end
+        Vagrant::Util::Subprocess.execute($project.editor.path, $project.editor.options, file_obj)
+    environment:
+      name: environment
+      synopsis: Specifies environment context for vagrant operations
+      execute: |
+        $environment_context = "all";
+        $environment_context = ARGV[-1] if ["status", "activate"].any? { |arg| ARGV[-1] != arg }
+    inventory:
+      name: inventory
+      synopsis: Sets environment context for writing inventory yaml file relevant to specified environment(s)
+      execute: |
+        $environment_context = "all";
+        $environment_context = ARGV[-1] if ["status", "activate"].any? { |arg| ARGV[-1] != arg }
+    managed:
+      name: managed
+      synopsis: Sets managed boolean to true
+      execute: |
+        $managed = true
+    kvm:
+      name: kvm 
+      synopsis: Sets kvm boolean to true
+      execute: |
+        $kvm= true
+    debug:
+      name: debug
+      synopsis: Sets debug boolean to true
+      execute: |
+        $debug = true
+    testing:
+      name: testing
+      synopsis: Just a command to test anything really
+      execute: |
+        $testing = true

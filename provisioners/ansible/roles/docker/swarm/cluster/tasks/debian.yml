@@ -1,0 +1,10 @@
+---
+- name: debian | Installing Pre-Reqs
+  apt:
+    name: "{{ item }}"
+    state: "present"
+  with_items:
+    - "python-pip"
+    - "jq"
+  become: true
+  when: ansible_os_family == "Debian"

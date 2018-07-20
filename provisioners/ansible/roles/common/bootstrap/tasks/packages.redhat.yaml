@@ -1,0 +1,51 @@
+# - name: "Clean up unwanted yum repos"
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  with_fileglob:
+#    - "/etc/yum.repos.d/*"
+#  notify: yum-clean-metadata
+
+- name: Enable CENTOS repos(CentOS only)
+  ini_file:
+    dest: /etc/yum.repos.d/CentOS-Base.repo
+    section: "{{ item }}"
+    option: enabled
+    value: 1
+  with_items:
+     - base
+     - updates
+     - extras
+     - centosplus
+  when:
+     - (ansible_distribution == "CentOS")
+     -   ansible_distribution_major_version == "7"
+
+- name: Add epel repository
+  yum: name={{item}} state=present
+  with_items:
+    - epel-release
+  tags: [base_config,packages]
+
+- name: install system updates for centos systems
+  yum: name=* state=latest update_cache=yes
+  ignore_errors: true
+
+- name: Install python developer tools 
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-devel
+    - '@C Development Tools and Libraries'
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' 
+  ignore_errors: true
+
+- name: Install git and related
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' 
+  ignore_errors: true

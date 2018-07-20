@@ -1,0 +1,31 @@
+---
+- name: 'physical01.contoso.com'
+  groups:
+    - 'managed-servers'
+  managed: true
+  ssh:
+    user: admin
+    port: 22
+    private_key_path: /Users/admin/.ssh/id_rsa
+  provision: true
+  provisioners:
+    - ansible:
+        inventory: "environments/contoso/inventory.yaml"
+        gather_facts: true
+        become: True        
+        roles:
+          - 'common/bootstrap'  
+        tasks:
+          - name: Shell | Find memory usage
+            shell: free -m | awk 'NR==2{printf "Memory Usage= %sMB/%sMB (%.2f%%)\n", $3,$2,$3*100/$2}'
+            register: memfree
+          - name: Debug | Display memory usage
+            debug: 
+              msg: "{{memfree.stdout}}"              
+          - name: Debug | Review Vars
+            debug:
+              var: "{{ item }}"
+            with_items:
+              - top_vars
+              - environment_all
+              - environment_secrets

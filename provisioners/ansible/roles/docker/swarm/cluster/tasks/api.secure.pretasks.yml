@@ -1,0 +1,19 @@
+- name: Create a tempdir
+  file:
+    state: directory
+    path: "{{ dds_temp_path }}"   
+
+- name: Remove passphrase file, if it exists
+  file:
+    state: absent
+    path: "{{ dds_passphrase_file }}" 
+
+- name: Create passphrase file
+  file:
+    state: touch
+    path: "{{ dds_passphrase_file }}" 
+
+- name: Add passphrase to the file
+  lineinfile:
+    dest: "{{ dds_passphrase_file }}"
+    line: "{{ dds_passphrase }}" 

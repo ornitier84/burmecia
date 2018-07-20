@@ -1,0 +1,26 @@
+- name: Remove the temp directory
+  file:
+    state: absent
+    path: "{{ dds_temp_path }}"
+
+- name: Install shell script for setting DOCKER env vars
+  template:
+    src: "{{ role_path }}/templates/docker_env.j2"
+    dest: "{{ dds_env_shell_path }}/docker_env.sh"
+    mode: 0755
+  when: dds_install_shell
+
+- name: Gather swarm node ready states
+  shell: |
+    docker node ls -q | xargs docker node inspect | jq -r '.[] | .Status.State'
+  args:
+    executable: /bin/bash
+  register: swarm_states
+  when: >
+        inventory_hostname == docker_swarm_primary_manager
+
+- name: Signal OK State if All Ansible Tasks result in OK Swarm Health
+  copy: content="SWARMOK" dest="{{ all_tasks_ok }}"
+  register: swarm_states
+  when: >
+        "docker_swarm_nodes_ansible_group_node_count == swarm_states.split(' ')[0]|int"

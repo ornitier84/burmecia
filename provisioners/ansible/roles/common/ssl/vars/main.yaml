@@ -1,0 +1,10 @@
+temp_path: /tmp
+country: US
+state: New York
+locality: Contoso
+organization: Contoso
+extfile: "{{ temp_path }}/extfile.cnf"
+passphrase_file: "{{ temp_path }}/passphrase.txt"
+client_cert_path: ~/.client.certs
+passphrase: "SuperSecretPassword_@!"
+server_cert_path: /etc/ssl/private

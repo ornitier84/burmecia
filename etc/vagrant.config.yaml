@@ -1,0 +1,86 @@
+---
+settings:
+  ansible:
+    basedir: provisioners/ansible
+    surrogate: devel-ansible01
+    vardir: ".vagrant/machines/%s/provisioners/ansible"
+    default_include_statement: 'include'
+    windows_helper_script: scripts/windows.ansible-playbook.sh
+  environment:
+    context_file: .vagrant/.environment_context
+    load_pattern: "nodes/**/*.yaml"
+    basedir: environments
+  logging:
+    debug: false
+    logs_dir: ".vagrant/var/log"
+  managed_nodes:
+    required_keys:
+      - ssh
+  # Platform detection
+  platform:
+    is_windows: "<%= RbConfig::CONFIG['host_os'] =~ /mingw32/ ? true : false %>"
+    is_osx: "<%= RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false %>"
+    is_linux: "<%= RbConfig::CONFIG['host_os'] =~ /linux/ ? true : false %>"
+  project:
+    editor: 
+      path: "C:\\progra~1\\SUBLIM~1\\subl.exe"
+      options: "-a"
+    ssh:
+      path: "C:\\Users\\<%= ENV['USER'] || ENV['USERNAME'] %>\\Desktop\\tools\\c\\cmder\\vendor\\git-for-windows\\usr\\bin\\ssh.exe"
+    is_vagrant: "<%= defined?(%{Vagrant}) ? :'true' : :'false' %>"
+    project_path: "<%= File.expand_path('.', Dir.pwd) %>"
+    requirements:
+      plugins:
+        libvirt:
+          - vagrant-hosts # Manages static DNS on vagrant guests
+          - vagrant-hostsupdater # Adds an entry to your /etc/hosts file on the host system
+          - vagrant-google # Google Cloud Platform Provider - for managing GCP Compute Instances
+          - vagrant-libvirt
+        virtualbox:
+          - vagrant-disksize
+          - vagrant-google
+          - vagrant-hosts
+          - vagrant-hostsupdater
+          - vagrant-vbguest
+  puppet:
+    basedir: provisioners/puppet
+  starttime: "<%= Time.now %>"
+  testing:
+    ternary: "<%= defined?(%{platform_is_windows}) ? :'ternary - true' : :'ternary - false' %>  "
+  user:
+    homedir: "<%= File.expand_path('~') %>"
+    name: "<%= ENV['USER'] || ENV['USERNAME'] %>"
+  vagrant:
+    api_version: 2
+    require_version: ">= 1.7.2"
+    defaults:
+      nodes:
+        keys:
+          provision: true
+    default_provider: 'virtualbox'
+    provider_order: 
+      - 'libvirt'
+      - 'virtualbox'
+    is_true: true
+    box_download_insecure: true
+    sshkey: 'etc/sshkeys/vagrantkey'
+    no_mount_vagrant: false
+    # disable nfs for windows vhosts (for now)
+    # see https://github.com/winnfsd/vagrant-winnfsd/issues/53
+    use_nfs: false
+    nfs_mount_options: 
+      - rw
+      - nolock
+      - vers=3
+      - udp
+      - noatime
+      - actimeo=1
+    vm_network_default_mode: 'private_network'
+    vm_usable_port_range_start: 2200
+    vm_usable_port_range_end: 10000
+    local_data_dir: "<%= Vagrant::Environment::DEFAULT_LOCAL_DATA %>"
+    windows_vagrant_synced_folder_basedir: '/vagrant'
+    vcpu_minimum: 1
+    vmem_minimum: 512
+    vcpu_allocation_ratio: 1
+    vmem_allocation_ratio: 1

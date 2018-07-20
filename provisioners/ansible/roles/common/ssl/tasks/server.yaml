@@ -1,0 +1,51 @@
+# generate_server_certs.yml 
+
+- name: Create server key
+  command: openssl genrsa -out {{ temp_path }}/server-key.pem 4096
+
+- name: Create the server CSR 
+  command: "openssl req -subj '/CN={{ ansible_hostname }}' -sha256 -new -key {{ temp_path }}/server-key.pem -out {{ temp_path }}/server.csr"
+
+- name: Remove extfile
+  file:
+    state: absent
+    path: "{{ extfile }}" 
+
+- name: Create extfile
+  file:
+    state: touch 
+    path: "{{ extfile }}" 
+
+- name: Add alt name to extfile
+  lineinfile:
+    dest: "{{ extfile }}" 
+    line: "subjectAltName = DNS:{{ ansible_hostname }}, DNS:localhost, IP:127.0.0.1"
+
+- name: Create the server certificate 
+  command: "openssl x509 -req -days 365 -sha256 -in {{ temp_path }}/server.csr -CA {{ temp_path }}/ca.pem -CAkey {{ temp_path }}/ca-key.pem -CAcreateserial -out {{ temp_path}}/server-cert.pem -extfile {{ temp_path}}/extfile.cnf -passin file:{{ passphrase_file }}"
+
+- name: Check that the server cert path exists
+  file:
+    state: directory
+    path: "{{ server_cert_path }}"
+
+- name: Create combined cert/key
+  shell: |
+    cat "{{ temp_path }}/server-cert.pem" "{{ temp_path }}/server-key.pem" > "{{ temp_path }}/combined_key.pem"
+
+- name: Copy server certs
+  command: cp "{{ temp_path }}/{{ item }}" "{{ server_cert_path }}/"
+  with_items:
+    - ca.pem
+    - server-cert.pem
+    - server-key.pem
+    - combined_key.pem
+
+- name: Set file permissions 
+  file:
+    path: "{{ server_cert_path }}/{{ item }}"
+    mode: 0400
+  with_items:
+    - ca.pem
+    - server-cert.pem
+    - server-key.pem

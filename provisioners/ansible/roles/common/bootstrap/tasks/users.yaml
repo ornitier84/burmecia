@@ -1,0 +1,10 @@
+- name: Add Users
+  user:
+    name: "{{ item }}"
+    state: present
+    groups: "{{ 'admin' if ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' else 'wheel' }}"
+  with_items: "{{ sshusers }}"
+
+- name: Add User to sudoers
+  action: 'lineinfile dest=/etc/sudoers.d/{{ item }} state=present create=yes regexp="{{ item }} .*" line="{{ item }} ALL=(ALL) NOPASSWD: ALL"'
+  with_items: "{{ sshusers }}"

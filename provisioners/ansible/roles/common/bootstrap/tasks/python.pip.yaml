@@ -1,0 +1,4 @@
+# Install (Bottle) python package.
+- pip:
+    name: bottle
+

@@ -1,0 +1,129 @@
+---
+# - name: Ensure dns servers are configured in /etc/resolv.conf
+#   template: src=resolv.conf.j2 dest=/etc/resolv.conf
+#   when: dns_setup
+#   tags: [base_config,dns]
+
+- name: Disabling SELinux
+  selinux:
+    state: disabled
+  tags: [base_config,selinux]
+
+- name: Stop firewalld before using docker machine
+  service:
+    name: firewalld
+    state: stopped
+    enabled: no
+  tags: [base_config,firewalld]
+
+- name: Add epel repository
+  yum: name={{item}} state=present
+  with_items:
+    - epel-release
+  tags: [base_config,packages]
+
+- name: Add docker ce repo
+  command: /usr/bin/yum-config-manager --add-repo "{{ Docker_repo_address }}"
+  tags: [base_config,docker-engine]
+
+- name: Run yum update
+  yum:
+    name: '*'
+    state: latest
+  tags: [base_config,packages]
+
+- name: Add necessary packages
+  yum: name={{item}} state=present update_cache=yes
+  with_items:
+    - yum-utils
+    - vim
+    - bash-completion
+    - device-mapper-persistent-data
+    - lvm2
+  tags: [base_config,packages]
+
+- name: Re-Install glibc-common package to add necessary locales
+  command: yum reinstall -y glibc-common
+  when: Reinstall_glibc_common
+  tags: [base_config,locale]
+
+- name: Set locale for en_US.utf8
+  command: localectl set-locale LANG="{{ locale }}"
+  when: Set_locale
+  tags: [base_config,locale]
+
+- name: Install Docker CE (specific version)
+  yum:
+    name: "docker-ce-{{ Docker_CE_version }}"
+    state: present
+    update_cache: yes
+  when: Docker_version
+  tags: [base_config,docker-engine]
+
+- name: Install Docker CE (latest version)
+  yum:
+    name: docker-ce
+    state: present
+    update_cache: yes
+  when: not Docker_version
+  tags: [base_config,docker-engine]
+
+- name: Start and enable Docker CE service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  tags: [base_config,docker-engine]
+
+- name: cluster | Checking Swarm Mode Status
+  command: "docker info"
+  register: "docker_info"
+  changed_when: false
+  check_mode: no
+  become: true
+
+- name: Docker Swarm Initialization
+  shell: docker swarm init --advertise-addr "{{ DOCKER_SWARM_HOST | default(ansible_host)}}"
+  when: >
+        'Swarm: inactive' in docker_info.stdout and
+        inventory_hostname == docker_swarm_primary_manager
+  tags: [docker-swarm,swarm-initialize]
+    
+- name: manage_python_modules | installing python pre-req packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  become: true
+  with_items:
+    - 'gmp-devel'
+    - 'libffi-devel'
+    - 'openssl-devel'
+    - 'python-crypto'
+    - 'python-devel'
+    - 'python-pip'
+    - 'python-setuptools'
+    - 'redhat-rpm-config'
+  when: >
+        ansible_os_family == "RedHat" and
+        ansible_distribution != "Fedora"
+
+- name: manage_python_modules | installing python modules
+  pip:
+    name: "{{ item }}"
+    state: present
+  become: true
+  with_items:
+    - 'docker-compose'
+    - 'docker-py'
+
+- name: Creating the overlay network for the swarm cluster
+  docker_network:
+    name: "{{ overlay_network_name }}"
+    driver: overlay
+    ipam_options:
+      subnet: "{{ overlay_network_IP }}/{{ overlay_network_netmask }}"
+      gateway: "{{ overlay_network_gateway }}"
+
+# - name: Creating the overlay network for the swarm cluster
+#   shell: docker network create --driver overlay --subnet "{{ overlay_network_IP }}"/"{{ overlay_network_netmask }}" --opt encrypted --attachable=true "{{ overlay_network_name }}"
+#   tags: [docker-swarm,overlay-network]      

@@ -1,0 +1,14 @@
+[req]
+default_bits=4096
+encrypt_key=no
+prompt = no
+default_md=sha256
+distinguished_name=req_subj
+[req_subj]
+commonName='{{ inventory_hostname }}'
+emailAddress='docker@{{ pri_domain_name }}'
+countryName='US'
+stateOrProvinceName='NY'
+localityName='New York'
+organizationName='Contoso'
+organizationalUnitName='Contoso'

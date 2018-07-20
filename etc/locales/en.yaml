@@ -1,0 +1,141 @@
+---
+strings:
+#-------------------------------------------------------------------------------
+# Translations for exception classes
+#-------------------------------------------------------------------------------
+  info:
+    boot:
+      up: |-
+        Bringing up %s
+    boot_destroy: |-
+      Destroying %s!
+    boot_halt: |-
+      Halting %s!
+    boot_completed: |-
+      Machine booted and ready!
+    completion:
+      done: |-
+        Done!
+    environment:
+      activate: |-
+        Activating vagrant environment %s
+    inventory:
+      file:
+        write: |-
+          Writing inventory file %s
+    group:
+      up: |-
+        Bringing up node group %s
+    managed:
+      status:
+        header: |
+          Current machine states:
+          
+    no_provisioners: |-
+      No provisioners specified in node yaml for host %s
+    provisioners:
+      local:
+        inline: |-
+          Running local command: %s
+        w_args: |-
+          Running local script %s with args %s
+        ok: |-
+          Local command execution was successful, output was: %s
+    singleton:
+      ssh:
+        ok: |-
+          Remote ssh command execution was successful, output was: %s
+  warnings:
+    context:
+      nodes:
+        empty: |-
+          Node set is empty. Make sure you have defined your nodes correctly,
+          and that you are treating managed nodes accordingly.
+          This is why you are most likely seeing only the default vagrant status.
+    missing_plugin: |-
+      You are missing at least one required vagrant plugin, install with:
+    missing_plugin_install: |-
+      rake init or vagrant plugin install %s
+    synced_folder_not_found: |-
+      Could not find path %s, skipping synced folder
+    definition:
+      skipped: |-
+        Some node definitions were skipped!
+        Run `vagrant debug status` to see why
+      skipping:
+        Skipping node definition %s due to condition - %s
+      provisioners:
+        malformed: |-
+          The provisioners yaml structure for %s does not match type Hash
+          Consult the node definition sample for proper syntax
+          Skipping this entry ...
+    libvirt_windows_os: |-
+      Detected non-Windows Host OS
+      Make sure you specify the proper hypervisor key:
+        key hypervisor: 'libvirt' 
+  errors:
+    fso:
+      operations:
+        failure: |-
+          There was a general failure in the attempt of this filesystem operation
+          Error was: %s
+    group:
+      not_found: |-
+        The specified group '%s' was not found in your environment
+    inventory:
+      file:
+        error: |-
+          Error in writing inventory file, error was: %s
+      path:
+        notfound: |-
+          The environment you specified has no environment directory: %s
+    environment:
+      path:
+        notfound: |-
+          The environment path you specified (%s) was not found.
+          Because of this failure in node definitions, 
+          Your nodes will not be listed and available for interaction.
+
+    definition:
+      yaml_syntax: |-
+        %s fails yaml syntax check
+      nobox: |-
+        You didn't speficy a vagrant box in node definition %s
+        Which either means you intend for the node to be of managed node type or
+        you simply forgot to include a box specification.
+        Consult the 'Usage' section in the README or review the node definition template 
+        Under the 'examples' directory
+    managed:
+      not_reachable: |-
+        The specified managed node is not reachable and/or not accepting requests for management: %s
+        Perhaps the node is not powered on?
+      checks_fail: |-
+        The vagrant deployment for managed node %s will fail, 
+        as it does not pass all requisite preflight checks 
+      ssh_privatekey_notfound: |-
+        Skipping managed node %s, 
+        as I could not find the ssh private key being referenced %s
+      missingkey: |-
+        The node definition for %s is missing the following key(s):
+      missingkeys: |-
+         - %s        
+    provisioners:
+      local:
+        failed: |-
+          Local command execution failed with error: %s
+    res: |-
+      Could not reliably determine the hardware spec: %s
+    singleton:
+      ssh:
+        failed: |-
+          Remote ssh command execution failed with error: %s    
+    exec: |-
+      Something went wrong in executing the command you specified: %s
+    generic: |-
+      Something went terribly wrong
+      Try calling the the same command, but this time, precede it with the 'debug' keyword
+    loaderror: |-
+      There was a problem loading a required library
+      You may experience unexpected results!
+      Error was: %s
+      For the full backtrace, issue the same vagrant command but this time, precede it with the 'debug' keyword

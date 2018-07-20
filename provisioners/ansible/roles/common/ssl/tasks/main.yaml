@@ -1,0 +1,7 @@
+---
+# main tasks file
+
+- include_tasks: preflight.yaml
+- include_tasks: ca.yaml
+- include_tasks: client.yaml
+- include_tasks: server.yaml

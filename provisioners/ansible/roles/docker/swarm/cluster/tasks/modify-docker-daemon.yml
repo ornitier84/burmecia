@@ -1,0 +1,35 @@
+- name: "Confirm docker service exists"
+  stat: path=/etc/init.d/docker
+  register: service_wrapper
+
+- name: "Stop docker"
+  service: name=docker state=stopped
+  when: >
+        service_wrapper.stat.exists   
+  register: service_stopped
+
+- name: create systemd override directory
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+
+- name: add systemd override
+  copy:
+    src: templates/override.j2
+    dest: /etc/systemd/system/docker.service.d/override.conf
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: "check for daemon file"
+  stat: path=/etc/docker/daemon.json
+  register: daemon_file
+
+- name: "create daemon file"
+  template: src=templates/daemon.j2 dest=/etc/docker/daemon.json
+
+- name: "Restart docker service"
+  service: name=docker state=started
+  become: True
+  when: >
+        service_wrapper.stat.exists
