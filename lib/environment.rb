@@ -24,29 +24,41 @@ class Context
     end    
   end
 
-  def get(managed: false)
+  def get()
     
-    # Instantiate the vagrant environments nodes class
-    nodes = Nodes.new
     # Determine environment context (if applicable)
-    if File.exist?($environment.context_file)
-      _environment = File.read($environment.context_file)
-      load_pattern = $environment_context == 'all' ?
-        "#{$environment.basedir}/**/#{$environment.load_pattern}" : "#{$environment.basedir}/#{_environment}/#{$environment.load_pattern}"
-      node_set = nodes.generate(load_pattern, managed: managed)
+    if File.exist?($environment.context_file) and $environment_context != 'all'
+      environment = File.read($environment.context_file)
+      return environment
+    else
+      return "all"
+    end
+
+  end
+
+  def activate (environment_context, managed: false)
+    # Instantiate the vagrant environments nodes class
+    nodes = Nodes.new    
+    if environment_context == 'all'
+      environment_load_pattern = "#{$environment.basedir}/**/#{$environment.load_pattern}"
+      node_set = nodes.generate(environment_load_pattern, managed: managed)
       return node_set      
     else
-      node_set = nodes.generate("#{$environment.basedir}/**/#{$environment.load_pattern}", managed: managed)
+      environment_load_pattern = "#{$environment.basedir}/**/#{$environment.load_pattern}"
+      node_set = nodes.generate(environment_load_pattern, managed: managed)
       return node_set
-    end    
+    end   
   end
 
 end
 
 class Nodes
+
+  def initialize
+    require 'erb'
+    require 'yaml'
+  end
   
-  require 'erb'
-  require 'yaml'
 
   def generate(environment_path, list_hosts_only=false, managed: false)
     # Verify the environment path exists
@@ -128,6 +140,25 @@ class Nodes
 
   end
 
+  def create(node_name, node_group, node_environment, node_box, node_size='medium')
+    @node_name = node_name
+    @node_box = node_box
+    @node_size = node_size
+    groups = Groups.new
+    groups.create(node_group, node_environment)
+    node_environment_path = "#{$environment.basedir}/#{node_environment}"
+    node_group_path = "#{node_environment_path}/#{$environment.nodesdir}/#{node_group}"
+    node_yaml = YAML.load(ERB.new(File.read($vagrant.templates.node)).result(binding)).to_yaml(line_width: -1)
+    node_yaml_file = "#{node_group_path}/#{node_name}.yaml"
+    begin
+      File.open(node_yaml_file,"w") do |file|
+        file.write(node_yaml)
+      end
+    rescue Exception => e
+      $logger.error($errors.fso.operations.failure % e)
+    end
+  end
+
 end
 
 class Groups
@@ -164,7 +195,18 @@ class Groups
     return @vagrant_groups
   end
 
-  
+  def create(group_name, group_environment)
+    group_environment_path = "#{$environment.basedir}/#{group_environment}"
+    group_path = "#{group_environment_path}/#{$environment.nodesdir}/#{group_name}"
+    if !File.exist?(group_path)
+      begin 
+        FileUtils::mkdir_p group_path
+      rescue Exception => e
+        $logger.error($errors.fso.operations.failure % e)
+      end      
+    end
+  end
+
 
 end
 
