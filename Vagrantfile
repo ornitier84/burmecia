@@ -7,6 +7,7 @@ require_relative 'lib/environment'
 require_relative 'lib/config'
 # Load built-in libraries
 require 'yaml'
+
 #
 # Specify minimum Vagrant/Vagrant API version
 #
@@ -28,14 +29,16 @@ context = VenvEnvironment::Context.new
 context.set()
 # Instantiate the vagrant cli node class
 node = VenvCLI::Node.new
-# Get environment context (if applicable) - generates the node set
-node_set = context.get()
+# Get environment context (if applicable)
+environment_context = context.get()
+# Generate the node set
+node_set = context.activate(environment_context)
 # Instantiate the vagrant cli group class
 group = VenvCLI::Group.new
 # Boot up node groups if applicable
 group.up(node_set)
 # Treat managed/bare metal nodes
-node_set_managed = $managed ? context.get(managed: true) : []
+node_set_managed = $managed ? context.activate(environment_context,managed: true) : []
 # Instantiate the vagrant groups class
 groups = VenvEnvironment::Groups.new
 # Generate the group set

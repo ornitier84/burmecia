@@ -10,6 +10,20 @@ settings:
     context_file: .vagrant/.environment_context
     load_pattern: "nodes/**/*.yaml"
     basedir: environments
+    nodesdir: nodes
+    sizing:
+      small:
+        memory: 512
+        vcpu: 1
+      medium:
+        memory: 1024
+        vcpu: 1
+      large:    
+        memory: 2048
+        vcpu: 2
+      xlarge:    
+        memory: 4096
+        vcpu: 4
   logging:
     debug: false
     logs_dir: ".vagrant/var/log"
@@ -26,7 +40,7 @@ settings:
       path: "C:\\progra~1\\SUBLIM~1\\subl.exe"
       options: "-a"
     ssh:
-      path: "C:\\Users\\<%= ENV['USER'] || ENV['USERNAME'] %>\\Desktop\\tools\\c\\cmder\\vendor\\git-for-windows\\usr\\bin\\ssh.exe"
+      path: "C:\\Users\\etejeda\\Desktop\\tools\\c\\cmder\\vendor\\git-for-windows\\usr\\bin\\ssh.exe"
     is_vagrant: "<%= defined?(%{Vagrant}) ? :'true' : :'false' %>"
     project_path: "<%= File.expand_path('.', Dir.pwd) %>"
     requirements:
@@ -56,8 +70,11 @@ settings:
     defaults:
       nodes:
         keys:
+          desktop: false
           provision: true
     default_provider: 'virtualbox'
+    templates:
+      node: etc/templates/node.yaml
     provider_order: 
       - 'libvirt'
       - 'virtualbox'

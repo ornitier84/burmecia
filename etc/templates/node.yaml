@@ -1,0 +1,7 @@
+---
+- name: '<%= @node_name %>'
+  box: '<%= @node_box %>'
+  desktop: <%= $vagrant.defaults.nodes.keys.desktop %>
+  vmem: <%= $environment.sizing[@node_size].memory %>
+  provision: <%= $vagrant.defaults.nodes.keys.provision %>
+  vcpu: <%= $environment.sizing[@node_size].vcpu %>
