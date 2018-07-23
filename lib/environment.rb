@@ -44,7 +44,7 @@ class Context
       node_set = nodes.generate(environment_load_pattern, managed: managed)
       return node_set      
     else
-      environment_load_pattern = "#{$environment.basedir}/**/#{$environment.load_pattern}"
+      environment_load_pattern = "#{$environment.basedir}/#{environment_context}/**/#{$environment.load_pattern}"
       node_set = nodes.generate(environment_load_pattern, managed: managed)
       return node_set
     end   
@@ -60,15 +60,15 @@ class Nodes
   end
   
 
-  def generate(environment_path, list_hosts_only=false, managed: false)
+  def generate(environment_load_pattern, list_hosts_only=false, managed: false)
     # Verify the environment path exists
-    environment_path_parent = environment_path.split(File::SEPARATOR).first
+    environment_path_parent = environment_load_pattern.split(File::SEPARATOR).first
     if !File.exist?(environment_path_parent)
       $logger.error($errors.environment.path.notfound % environment_path_parent) if $logger
     end
     if list_hosts_only
       hosts = []
-      Dir.glob(environment_path).each do |f|
+      Dir.glob(environment_load_pattern).each do |f|
         hosts.push(File.basename(f,".*"))
       end
       return hosts
@@ -77,7 +77,7 @@ class Nodes
       node_set = []
       node_names = []
       # Read node yaml definitions
-      Dir.glob(environment_path).each do |f|
+      Dir.glob(environment_load_pattern).each do |f|
         node_folder = File.dirname(f).split(File::SEPARATOR)[-1]
         begin
           y = YAML.load(ERB.new(File.read(f)).result)
