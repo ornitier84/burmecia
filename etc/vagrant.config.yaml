@@ -32,9 +32,9 @@ settings:
       - ssh
   # Platform detection
   platform:
-    is_windows: "<%= RbConfig::CONFIG['host_os'] =~ /mingw32/ ? true : false %>"
-    is_osx: "<%= RbConfig::CONFIG['host_os'] =~ /darwin/ ? true : false %>"
-    is_linux: "<%= RbConfig::CONFIG['host_os'] =~ /linux/ ? true : false %>"
+    is_windows: <%= Vagrant::Util::Platform.windows? || Vagrant::Util::Platform.cygwin? %>
+    is_osx: <%= Vagrant::Util::Platform.darwin? %>
+    is_linux: <%= Vagrant::Util::Platform.linux? %>
   project:
     editor: 
       path: "C:\\progra~1\\SUBLIM~1\\subl.exe"
