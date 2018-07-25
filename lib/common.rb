@@ -19,16 +19,19 @@ module VenvCommon
 
 	def initialize
 	  require 'open3'
-      @vagrant_cmd = Vagrant::Util::Which.which("vagrant")
       @ssh_cmd = Vagrant::Util::Which.which("ssh")
+	end
+
+	def CLI.vagrant_cmd
+      @@vagrant_cmd = Vagrant::Util::Which.which("vagrant")
 	end
 
     def up_singleton(node_object, no_provision: false)
       $logger.info($info.boot.up % node_object['name'])
       if no_provision
-      	r = Vagrant::Util::Subprocess.execute(@vagrant_cmd, "up", "#{node_object['name']}", "--no-provision")
+      	r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "up", "#{node_object['name']}", "--no-provision")
       else
-      	r = Vagrant::Util::Subprocess.execute(@vagrant_cmd, "up", "#{node_object['name']}")
+      	r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "up", "#{node_object['name']}")
       end
       puts r.stdout.strip!
       puts r.stderr.strip!
@@ -64,7 +67,7 @@ module VenvCommon
 	  	    end
 	    else
 	        r = Vagrant::Util::Subprocess.execute(
-	      	@vagrant_cmd, 
+	      	CLI.vagrant_cmd, 
 	      	"ssh", 
 	      	"#{node_object['name']}",
 	      	"-c",

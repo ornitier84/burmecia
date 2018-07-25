@@ -4,11 +4,11 @@ require_relative 'lib/environment'
 require_relative 'lib/misc'
 
 # Load extra commands config
-vagrant_extra_commands_file = File.expand_path('../etc/commands.extra.yaml', __FILE__)
+vagrant_commands_file = File.expand_path('../etc/commands.yaml', __FILE__)
 # Initialize config loader
 config = YAMLTasks.new
 # Load ad-hoc commands, initialize variables in global scope
-config.parse(vagrant_extra_commands_file, 'definitions').each
+config.parse(vagrant_commands_file, 'definitions').each
 $commands.marshal_dump.each do |command,properties| 
   command_name = command.to_s.capitalize()
   _class = """
