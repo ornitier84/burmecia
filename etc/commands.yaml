@@ -142,6 +142,7 @@ definitions:
           opt.separator  ""
           opt.separator  "Actions"
           opt.separator  "     activate: activate specified environment"
+          opt.separator  "     list: lists available environments"
           opt.separator  ""
           opt.separator  "Options"
           opt.on("-h","--help","help") do
@@ -152,6 +153,11 @@ definitions:
         case ARGV[1]
         when "activate"
           $environment_context = ARGV[2]
+        when "list"
+          Dir.glob("#{$environment.basedir}/*").select {
+            |f| 
+            puts f if File.directory?(f)
+          }
         else
           puts opt_parser
         end
