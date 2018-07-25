@@ -8,8 +8,8 @@ module VenvCLI
     end
 
     def up(node_object)
-      linked_machines = [node_object.key?("linked_vms"),!node_object["linked_vms"].nil?].all? ?
-      node_object["linked_vms"] : []
+      linked_machines = [node_object.key?("linked_machines"),!node_object["linked_machines"].nil?].all? ?
+      node_object["linked_machines"] : []
       linked_machines.each do |m|
         @node.up_singleton({'name' => "#{m}"})
       end
@@ -143,8 +143,7 @@ module VenvCLI
     end
     
     def create(environment)
-      if $environment_context and ARGV.include? 'inventory'
-        # Instantiate the vagrant cli inventory class
+      if [$environment_context != 'all', (ARGV.include? 'inventory')].all?
         begin
           @inventory.write(environment)
         rescue Exception => e

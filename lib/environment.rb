@@ -141,6 +141,7 @@ class Nodes
   end
 
   def create(node_name, node_group, node_environment, node_box, node_size='medium')
+    
     @node_name = node_name
     @node_box = node_box
     @node_size = node_size
@@ -150,6 +151,7 @@ class Nodes
     node_group_path = "#{node_environment_path}/#{$environment.nodesdir}/#{node_group}"
     node_yaml = YAML.load(ERB.new(File.read($vagrant.templates.node)).result(binding)).to_yaml(line_width: -1)
     node_yaml_file = "#{node_group_path}/#{node_name}.yaml"
+    $logger.info($info.commands.node.create % node_yaml_file)
     begin
       File.open(node_yaml_file,"w") do |file|
         file.write(node_yaml)

@@ -15,17 +15,8 @@ strings:
       Machine booted and ready!
     commands:
       node:
-        usage: |-
-          Usage: 
-            e.g.
-              vagrant node create --name mynode --group mygroup --environment myenvironment --size large --box mybox
-              vagrant node create -n mynode -g mygroup -e myenvironment -s large -b mybox
-      group:
-        usage: |-
-          Usage: 
-            e.g.
-              vagrant group create --name mygroup --environment myenvironment
-              vagrant group create -n mygroup -e myenvironment
+        create: |-
+          Writing node definition file %s
     completion:
       done: |-
         Done!
