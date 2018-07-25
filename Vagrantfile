@@ -7,18 +7,11 @@ require_relative 'lib/environment'
 require_relative 'lib/config'
 # Load built-in libraries
 require 'yaml'
-
 #
 # Specify minimum Vagrant/Vagrant API version
 #
 Vagrant.require_version "#{$vagrant.require_version}"
 VAGRANTFILE_API_VERSION = $vagrant.api_version
-# Initialize global variables
-$is_virtualbox = !$virtbox.nil? || [defined? VagrantPlugins::ProviderVirtualBox, $vagrant.provider_order.first == 'virtualbox'].all? ? true : false
-$is_kvm = !$kvm.nil? || [defined? VagrantPlugins::ProviderLibvirt, $vagrant.provider_order.first == 'libvirt'].all? ? true : false
-$plugin_disksize_available = defined? Vagrant::Disksize::Plugin
-$plugin_vagranthosts_available = defined? VagrantHosts::Plugin
-$provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
 # Instantiate the vagrant cli inventory class
 inventory = VenvCLI::Inventory.new
 # Write inventory file(s) if applicable
