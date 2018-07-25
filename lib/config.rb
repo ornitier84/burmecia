@@ -18,8 +18,14 @@ config.parse(vagrant_locale_file, 'strings')
 # Load config, initialize variables in global scope
 config.parse(vagrant_config_file, 'settings')
 # Logging
-@debug = $debug || ENV['DEBUG'] || ENV['debug'] || $logging.debug || false
+@debug = [(ARGV.include?('--debug')), ENV['DEBUG'], ENV['debug'], $logging.debug].any?
 $logger = Vagrant::UI::Colored.new
+# Initialize global variables
+$is_virtualbox = !$virtbox.nil? || [defined? VagrantPlugins::ProviderVirtualBox, $vagrant.provider_order.first == 'virtualbox'].all? ? true : false
+$is_kvm = !$kvm.nil? || [defined? VagrantPlugins::ProviderLibvirt, $vagrant.provider_order.first == 'libvirt'].all? ? true : false
+$plugin_disksize_available = defined? Vagrant::Disksize::Plugin
+$plugin_vagranthosts_available = defined? VagrantHosts::Plugin
+$provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
 # Create required paths
 paths = [$logging.logs_dir]
 paths.each do |directory|
@@ -35,6 +41,9 @@ end
 missing_plugins = []
 @required_plugins = $project.requirements.plugins['libvirt'] if $platform.is_linux
 @required_plugins = $project.requirements.plugins['virtualbox'] if $platform.is_windows or $platform.is_osx
+$project.requirements.plugins.mandatory.each do |plugin|
+	@required_plugins.push(plugin)
+end
 if not @required_plugins.empty?
 	@required_plugins.each do |plugin|
 	  unless Vagrant.has_plugin?(plugin)
@@ -53,13 +62,15 @@ end
 #
 # vagrant-hosts plugin
 #
-begin
-	require 'vagrant-hosts' 
-rescue Exception => err
-  if $debug
-    STDERR.puts "Exception: #{err.message}"
-    STDERR.puts "Backtrace:\n#{@pretty_print.backtrace(err)}\n"  
-  else
-    $logger.error($errors.loaderror % err)
-  end
+$project.requirements.plugins.mandatory.each do |plugin|
+	begin
+		require "#{plugin}" 
+	rescue Exception => err
+	  if @debug
+	    STDERR.puts "Exception: #{err.message}"
+	    STDERR.puts "Backtrace:\n#{@pretty_print.backtrace(err)}\n"  
+	  else
+	    $logger.error($errors.loaderror % err)
+	  end
+	end
 end

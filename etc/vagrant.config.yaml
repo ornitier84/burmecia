@@ -45,15 +45,15 @@ settings:
     project_path: "<%= File.expand_path('.', Dir.pwd) %>"
     requirements:
       plugins:
-        libvirt:
+        mandatory:
           - vagrant-hosts # Manages static DNS on vagrant guests
+        libvirt:
           - vagrant-hostsupdater # Adds an entry to your /etc/hosts file on the host system
           - vagrant-google # Google Cloud Platform Provider - for managing GCP Compute Instances
           - vagrant-libvirt
         virtualbox:
           - vagrant-disksize
           - vagrant-google
-          - vagrant-hosts
           - vagrant-hostsupdater
           - vagrant-vbguest
   puppet:
@@ -70,8 +70,10 @@ settings:
     defaults:
       nodes:
         keys:
+          box: 'ubuntu/xenial64'
           desktop: false
           provision: true
+        size: medium
     default_provider: 'virtualbox'
     templates:
       node: etc/templates/node.yaml
