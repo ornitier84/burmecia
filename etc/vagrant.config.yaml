@@ -67,6 +67,9 @@ settings:
   vagrant:
     api_version: 2
     require_version: ">= 1.7.2"
+    commands:
+      adhoc: 
+        files: lib/commands/*.rb
     defaults:
       nodes:
         keys:

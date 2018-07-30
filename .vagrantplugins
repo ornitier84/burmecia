@@ -3,29 +3,33 @@ require_relative 'lib/config'
 require_relative 'lib/environment'
 require_relative 'lib/misc'
 
-# Load extra commands config
-vagrant_commands_file = File.expand_path('../etc/commands.yaml', __FILE__)
 # Initialize config loader
 config = YAMLTasks.new
-# Load ad-hoc commands, initialize variables in global scope
-config.parse(vagrant_commands_file, 'definitions').each
-$commands.marshal_dump.each do |command,properties| 
-  command_name = command.to_s.capitalize()
+Dir.glob($vagrant.commands.adhoc.files).each do |cmdf|
+  command_name = File.basename(cmdf,".*")
+  command_class_name = File.basename(cmdf,".*").capitalize()
+  cmdf_first_line = strVar = File.open(cmdf, &:readline)
+  if !cmdf_first_line.start_with?('#')
+    $logger.error($errors.commands.ad_hoc.synopsis % cmdf)
+    next
+  end
+  command_synopsis = cmdf_first_line[2...-2]
+  command_execute = File.read(cmdf)
   _class = """
-    Object.const_set('#{command_name}', Class.new(Vagrant.plugin(2, :command)){ 
+    Object.const_set('#{command_class_name}', Class.new(Vagrant.plugin(2, :command)){ 
     def self.synopsis() 
-      '#{properties.synopsis}'
+      '#{command_synopsis}'
     end
     def execute() 
-      #{properties.execute}
+      #{command_execute}
     end 
   })
   """
   _plugin = """
-  Object.const_set('#{command_name}_Plugin', Class.new(Vagrant.plugin(2)){ 
-    name '#{command_name}'
-    command '#{command}' do 
-      #{command_name} 
+  Object.const_set('#{command_class_name}_Plugin', Class.new(Vagrant.plugin(2)){ 
+    name '#{command_class_name}'
+    command '#{command_name}' do 
+      #{command_class_name} 
     end 
   })
   """
