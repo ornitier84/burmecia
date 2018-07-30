@@ -78,6 +78,11 @@ strings:
       Make sure you specify the proper hypervisor key:
         key hypervisor: 'libvirt' 
   errors:
+    commands:
+      ad_hoc:
+        synopsis: |-
+          The first line in ad-hoc command file must begin with an octothorp (#) and contain the command synopsis!
+          Skipping %s
     fso:
       operations:
         failure: |-

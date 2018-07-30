@@ -50,7 +50,7 @@ else
 fi
 # Install rbenv & ruby
 if ! test -d /usr/local/rbenv;then 
-	loger "Installing rbenv"
+	logger "Installing rbenv"
 	git clone https://github.com/rbenv/rbenv.git /usr/local/rbenv
 fi
 if ! test -d /usr/local/rbenv/plugins;then 
@@ -121,6 +121,15 @@ source ~/.bash_profile
 
 rbenv rehash
 rbenv global 1.9.2-p290
+
+if ! egrep -q '^#.*rbenv.*setup' /etc/profile.d/rbenv.sh;then
+	echo '# rbenv setup' > /etc/profile.d/rbenv.sh
+	echo 'export RBENV_ROOT=/usr/local/rbenv' >> /etc/profile.d/rbenv.sh
+	echo 'export PATH="$RBENV_ROOT/bin:$PATH"' >> /etc/profile.d/rbenv.sh
+	echo 'eval "$(rbenv init -)"' >> /etc/profile.d/rbenv.sh
+	chmod +x /etc/profile.d/rbenv.sh
+	source /etc/profile.d/rbenv.sh
+fi
 
 if ! eval $(gem list rbenv-rehash -i);then 
 	gem install rbenv-rehash --no-ri --no-rdoc
