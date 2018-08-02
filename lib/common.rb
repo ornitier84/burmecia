@@ -1,5 +1,23 @@
 module VenvCommon
 
+	class Prompt
+
+		def ask(message, valid_options)
+		  if valid_options
+		    answer = get_stdin("#{message} #{valid_options.to_s.gsub(/"/, '').gsub(/, /,'/')} ") while !valid_options.include?(answer)
+		  else
+		    answer = get_stdin(message)
+		  end
+		  answer
+		end
+
+		def get_stdin(message)
+		  print message
+		  STDIN.gets.chomp
+		end		
+
+	end
+
 	class String
 
 		def to_bool(s)
@@ -25,6 +43,16 @@ module VenvCommon
 	def CLI.vagrant_cmd
       @@vagrant_cmd = Vagrant::Util::Which.which("vagrant")
 	end
+
+    def status_singleton(node_object, no_provision: false)
+		r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "status", "#{node_object['name']}")
+		stdout = r.stdout.strip!
+		if stdout.match(/#{node_object['name']}#{$misc.patterns.node.up}/)
+			return :reachable
+		else
+			return :not_reachable
+		end
+    end
 
     def up_singleton(node_object, no_provision: false)
       $logger.info($info.boot.up % node_object['name'])
@@ -54,6 +82,9 @@ module VenvCommon
 	      	"'
 	      	'"
 	        ].join(' ')
+      	    if @debug
+  	    		$logger.info($info.singleton.ssh.command % "#{$project.ssh.path} #{ssh_args} '#{args}'")
+      	    end			
 			stdin, stdout, stderr, wait_thr = Open3.popen3(
 				"#{$project.ssh.path} #{ssh_args} '#{args}'"
 				)

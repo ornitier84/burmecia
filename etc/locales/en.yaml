@@ -31,6 +31,10 @@ strings:
       up: |-
         Bringing up node group %s
     managed:
+      provisioners:
+        ansible:
+          invoke: |-
+            Running ansible via %s
       status:
         header: |
           Current machine states:
@@ -47,6 +51,8 @@ strings:
           Local command execution was successful, output was: %s
     singleton:
       ssh:
+        command: |-
+          Running ssh process as follows: %s
         ok: |-
           Remote ssh command execution was successful, output was: %s
   warnings:
@@ -115,6 +121,12 @@ strings:
         Consult the 'Usage' section in the README or review the node definition template 
         Under the 'examples' directory
     managed:
+      surrogate:
+        not_reachable: |-
+          Windows platform detected. 
+          As such, the project configuration designates a surrogate through which ansible is to be invoked.
+          However, this host is not available, not reachable, and/or not accepting requests for interaction: %s
+          Perhaps the node is not powered on?
       not_reachable: |-
         The specified managed node is not reachable and/or not accepting requests for management: %s
         Perhaps the node is not powered on?

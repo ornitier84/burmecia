@@ -9,7 +9,7 @@ require_relative 'formatter'
 # Instantiate the pretty_print text formatter handler
 @pretty_print = VenvFormatter::PrettyPrint.new
 # Load main config
-vagrant_config_file = File.expand_path('../../etc/vagrant.config.yaml', __FILE__)
+vagrant_config_file = File.expand_path('../../etc/config.yaml', __FILE__)
 vagrant_locale_file = File.expand_path('../../etc/locales/en.yaml', __FILE__)
 # Initialize config loader
 config = YAMLTasks.new

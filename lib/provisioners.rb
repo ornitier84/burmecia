@@ -59,12 +59,14 @@ module VenvProvisioners
 		              "--provisioners_root_dir", 
 		              "#{$vagrant.windows_vagrant_synced_folder_basedir}"]
 		              if $managed
-		              	  if $debug
-		              	  	puts "Running #{$vagrant.windows_vagrant_synced_folder_basedir}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
+		              	  playbook_args.push("--connection ssh")
+		              	  ssh_cmd = "#{$vagrant.windows_vagrant_synced_folder_basedir}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
+		              	  if $logging.debug
+		              	  	$logger.info($info.managed.provisioners.ansible.invoke % ssh_cmd)
 		              	  end
 		              	  @node.ssh_singleton(
 		              	  	{'name' => $ansible.surrogate},
-		              	  	"#{$vagrant.windows_vagrant_synced_folder_basedir}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
+		              	  	ssh_cmd
 		              	  	)
 		              else
 			              machine.vm.provision 'shell' do |sh|

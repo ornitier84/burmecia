@@ -8,36 +8,35 @@ module VenvManaged
 			@port = VenvNetworking::TCP.new
 		end
 
-		def stat(host)
-
-			# Initialize preflight checks
-			all_checks_pass = false
+		def stat(host, all_checks_pass=false)
 
 			#Check for required keys
-			missing_keys = []
-			$managed_nodes.required_keys.each do |k|
-			  unless host.has_key?(k)
-			    missing_keys.push(k)
-			  end
-			end
-			unless missing_keys.empty?
-			  $logger.error( $errors.managed.missingkey % host['name'])
-			  missing_keys.each do |k|
-				$logger.warn($errors.managed.missingkeys % k)
-			  end
-			else
-				all_checks_pass = true
-			end
-			# Check for mandatory ssh private key specification
-			if host.key?('ssh_private_key_path')
-				ssh_private_key_path = File.expand_path(host['ssh_private_key_path'])
-				# Skip managed node if the specified ssh private key does not exist 
-				unless File.exist?(ssh_private_key_path)
-					$logger.error($errors.managed.ssh_privatekey_notfound % [host['name'], ssh_private_key_path])
+			if !all_checks_pass
+				missing_keys = []
+				$managed_nodes.required_keys.each do |k|
+				  unless host.has_key?(k)
+				    missing_keys.push(k)
+				  end
+				end
+				unless missing_keys.empty?
+				  $logger.error( $errors.managed.missingkey % host['name'])
+				  missing_keys.each do |k|
+					$logger.warn($errors.managed.missingkeys % k)
+				  end
+				else
+					all_checks_pass = true
+				end
+				# Check for mandatory ssh private key specification
+				if host.key?('ssh_private_key_path')
+					ssh_private_key_path = File.expand_path(host['ssh_private_key_path'])
+					# Skip managed node if the specified ssh private key does not exist 
+					unless File.exist?(ssh_private_key_path)
+						$logger.error($errors.managed.ssh_privatekey_notfound % [host['name'], ssh_private_key_path])
+						all_checks_pass = false
+					end
+				else
 					all_checks_pass = false
 				end
-			else
-				all_checks_pass = false
 			end
 			if host.key?('ip')
 				return read_state(host['ip'], host['ssh']['port'])

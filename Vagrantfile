@@ -31,7 +31,12 @@ group = VenvCLI::Group.new
 # Boot up node groups if applicable
 group.up(node_set)
 # Treat managed/bare metal nodes
-node_set_managed = $managed ? context.activate(environment_context,managed: true) : []
+node_set_managed = $managed ? context.activate(environment_context, managed: true) : []
+if $managed_node_args
+  if $managed_node_args.length > 0
+    node_set_managed = node_set_managed.select { |k, v| $managed_node_args.include?(k['name']) }
+  end
+end
 # Instantiate the vagrant groups class
 groups = VenvEnvironment::Groups.new
 # Generate the group set
@@ -77,7 +82,7 @@ if $managed
       elsif ARGV.include? "status"
         node.stat(node_object, node_set_managed)
       elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
-        node.up(node_object)
+        node.up(node_object, node_set)
       end
   end 
 end
@@ -86,7 +91,7 @@ at_exit {
     if $nodes_were_skipped
       $logger.warn($warnings.definition.skipped) 
     end
-    if node_set.empty?
+    if node_set.empty? and !(["environment", "inventory"].any? { |arg| ARGV.include? arg })
       $logger.warn($warnings.context.nodes.empty)
     end    
 }

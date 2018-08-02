@@ -11,6 +11,11 @@ settings:
     load_pattern: "nodes/**/*.yaml"
     basedir: environments
     nodesdir: nodes
+    skeleton:
+      - group_vars/all
+      - host_vars
+      - nodes
+      - templates
     sizing:
       small:
         memory: 512
@@ -25,11 +30,16 @@ settings:
         memory: 4096
         vcpu: 4
   logging:
-    debug: false
+    debug: true
     logs_dir: ".vagrant/var/log"
   managed_nodes:
     required_keys:
       - ssh
+  # misc
+  misc:
+    patterns:
+      node:
+        up: ".*(running|reachable)"
   # Platform detection
   platform:
     is_windows: <%= Vagrant::Util::Platform.windows? || Vagrant::Util::Platform.cygwin? %>

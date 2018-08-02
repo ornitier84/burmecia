@@ -22,6 +22,7 @@ ANSIBLE_KEEP_REMOTE_FILES=0
 ANSIBLE_ROLES_PATH=/vagrant/provisioners/ansible/roles:/vagrant/provisioners/ansible/roles.global
 ANSIBLE_LIBRARY=/vagrant/provisioners/ansible/library/modules
 LIMIT_HOSTNAME="-l all"
+CONNECTION=local
 inventory=/vagrant/scripts/inventory.py
 playbook=/vagrant/provisioners/ansible/site.yml
 PREFIX=""
@@ -32,6 +33,7 @@ while (( "$#" )); do
     if [[ "$1" =~ .*--roles-path.* ]]; then ANSIBLE_ROLES_PATH="${2}";fi
     if [[ "$1" =~ .*--modules-path.* ]]; then ANSIBLE_LIBRARY="${2}";fi
     if [[ "$1" =~ .*--inventory.* ]]; then inventory="${2}";fi
+    if [[ "$1" =~ .*--connection.* ]]; then CONNECTION="${2}";fi
     if [[ "$1" =~ .*--provisioners_root_dir.* ]]; then PROVISIONERS_ROOT_DIR="${2}";fi
     if [[ "$1" =~ .*--limit.* ]]; then LIMIT_HOSTNAME="-l ${2}";fi
     if [[ "$1" =~ .*--groups.* ]]; then GROUP="${2}";fi
@@ -130,7 +132,7 @@ run_playbook() {
     --inventory-file="${inventory}" \
     "${LIMIT_HOSTNAME}" \
     --extra-vars "is_windows=true, provisioners_root_dir=${PROVISIONERS_ROOT_DIR}" \
-    --connection=local \
+    --connection=${CONNECTION} \
     "$@"
 }
 

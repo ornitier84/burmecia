@@ -16,8 +16,9 @@ opt_parser = OptionParser.new do |opt|
 end
 opt_parser.parse!
 case 
-when [ "provsion","shutdown","status"].include?(ARGV[1])
+when [ "provision","shutdown","status" ].include?(ARGV[1])
   $managed = true
+  $managed_node_args = ARGV.last.split(",") unless ARGV.last == 'status'
 else
   puts opt_parser
 end
