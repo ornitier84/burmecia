@@ -8,7 +8,7 @@ task :i => :init
 task :u => :destroy
 
 task :init do
-	require_relative 'lib/yaml.misc'
+	require_relative 'lib/misc'
 	# Platform
 	host_os = RbConfig::CONFIG['host_os'] # e.g. /darwin/, /linux/, /mingw/ (Windows cygwin)
 	platform_is_osx = true if host_os =~ /darwin/ || nil
@@ -16,7 +16,7 @@ task :init do
 	platform_is_windows = true if host_os =~ /mingw/ || nil	
 	# Load main config
 	config = YAMLTasks.new
-	config.parse('etc/vagrant.config.yaml', 'settings')	
+	config.parse('etc/config.yaml', 'settings')	
 	## Required plugins
 	required_plugins = []
 	if $platform.is_linux
@@ -31,15 +31,34 @@ task :init do
 	end	
 end
 
+desc "Shutdown and (if applicable) delete all machines in current environment"
 task :destroy do
-  abort("rake aborted!") if ask("Are you sure you want to shutdown and delete all of your defined machine?", ['y', 'n']) == 'n'
+  require_relative 'lib/common'
+  prompt = VenvCommon::Prompt.new
+  abort("rake aborted!") if prompt.ask("Are you sure you want to shutdown and delete all of your defined machine?", ['y', 'n']) == 'n'
   system("vagrant destroy --force")
 end
 
 desc "Run tests"
 task :tests do
   system("echo Running vagrant tests ...")
+  timestamp = Time.now.utc.strftime('%Y%m%d%H%M%S')
+  system("echo Testing environment create")
+  system("vagrant environment create dummy-#{timestamp}")
+  system("echo Testing environment activate")
+  system("vagrant environment activate dummy-#{timestamp}")
+  system("echo Testing node create")
+  system("vagrant node create -e dummy-#{timestamp} -n dummy-#{timestamp} -g dummy")
+  system("echo Testing vagrant status")
   system("vagrant status")
+  system("echo Testing vagrant up")
+  system("vagrant up dummy-#{timestamp}")
+  system("echo Testing vagrant halt")
+  system("vagrant halt dummy-#{timestamp}")
+  system("echo Testing vagrant destroy with --force")
+  system("vagrant destroy dummy-#{timestamp} --force")
+  system("echo Testing vagrant environment remove with --force")
+  system("vagrant environment remove dummy-#{timestamp} --force")
 end
 
 def assert_execution(condition)
@@ -48,18 +67,4 @@ def assert_execution(condition)
   else
     puts "FAILED"
   end
-end
-
-def get_stdin(message)
-  print message
-  STDIN.gets.chomp
-end
-
-def ask(message, valid_options)
-  if valid_options
-    answer = get_stdin("#{message} #{valid_options.to_s.gsub(/"/, '').gsub(/, /,'/')} ") while !valid_options.include?(answer)
-  else
-    answer = get_stdin(message)
-  end
-  answer
 end

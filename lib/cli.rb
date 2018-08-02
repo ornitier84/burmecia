@@ -24,12 +24,15 @@ module VenvCLI
         require_relative 'machine'
         require_relative 'managed'
       end
+      require_relative 'common'     
       require_relative 'provision'      
       if $managed
         # Instantiate the vagrant managed node class 
         @managed_node = VenvManaged::Node.new
         # Instantiate the vagrant linked machines class 
-        @linked_machines = LinkedMachines.new      
+        @linked_machines = LinkedMachines.new
+        # Instantiate the vagrant common class 
+        @snode = VenvCommon::CLI.new      
       else         
         # Instantiate the vagrant network class 
         @network = VenvNetworking::Network.new
@@ -60,7 +63,19 @@ module VenvCLI
         if status.to_s != 'reachable'
           $logger.error($errors.managed.not_reachable % node_object['name'])
           return false
-        end      
+        end
+        if $platform.is_windows
+          ansible_surrogate = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
+          if ansible_surrogate.key?('managed') and !ansible_surrogate['managed'].nil?
+            ansible_surrogate_status = get_managed_state(ansible_surrogate)
+          else
+            ansible_surrogate_status = @snode.status_singleton(ansible_surrogate)
+          end
+          if ansible_surrogate_status.to_s != 'reachable'
+            $logger.error($errors.managed.surrogate.not_reachable % $ansible.surrogate)
+            return false
+          end
+        end          
       else       
         # Configure hardware
         @hardware.configure(config, node_object, machine)
