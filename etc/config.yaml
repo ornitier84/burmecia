@@ -116,8 +116,9 @@ settings:
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
     local_data_dir: "<%= defined?(%{Vagrant}) ? :"#{Vagrant::Environment::DEFAULT_LOCAL_DATA}" : :".vagrant" %>"
-    # Vagrant::Environment::DEFAULT_LOCAL_DATA
-    windows_vagrant_synced_folder_basedir: '/vagrant'
+    basedir:
+      posix: '.'
+      windows: '/vagrant'
     vcpu_minimum: 1
     vmem_minimum: 512
     vcpu_allocation_ratio: 1

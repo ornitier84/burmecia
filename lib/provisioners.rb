@@ -23,16 +23,16 @@ module VenvProvisioners
 		                if $platform.is_windows
 		                  @inventory = provisioner[provisioner_name]['inventory'].start_with?('/') ? 
 		                  provisioner[provisioner_name]['inventory'] :
-		                  "#{$vagrant.windows_vagrant_synced_folder_basedir}/#{provisioner[provisioner_name]['inventory']}"
+		                  "#{$vagrant.basedir.windows}/#{provisioner[provisioner_name]['inventory']}"
 		                else
 		                  @inventory = provisioner[provisioner_name]['inventory'].start_with?('/') ? 
 		                  provisioner[provisioner_name]['inventory'] :
-		                  "./#{provisioner[provisioner_name]['inventory']}"
+		                  "#{$vagrant.basedir.posix}/#{provisioner[provisioner_name]['inventory']}"
 		                end
 		            else
 		                @inventory = $platform.is_windows ? 
-		                "#{$vagrant.windows_vagrant_synced_folder_basedir}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
-		                "./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+		                "#{$vagrant.basedir.windows}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
+		                "#{$vagrant.basedir.posix}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
 		            end
 		            ######Inventory Logic#END
 		            ##################################################
@@ -51,16 +51,16 @@ module VenvProvisioners
 		              "--inventory",
 		              "#{@inventory}",
 		              "--provisioners_root_dir", 
-		              "#{$vagrant.windows_vagrant_synced_folder_basedir}"] : 
+		              "#{$vagrant.basedir.windows}"] : 
 		              ["--playbook", 
 		              "#{@playbook}",
 		              "--inventory",
 		              "#{@inventory}", 
 		              "--provisioners_root_dir", 
-		              "#{$vagrant.windows_vagrant_synced_folder_basedir}"]
+		              "#{$vagrant.basedir.windows}"]
 		              if $managed
 		              	  playbook_args.push("--connection ssh")
-		              	  ssh_cmd = "#{$vagrant.windows_vagrant_synced_folder_basedir}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
+		              	  ssh_cmd = "#{$vagrant.basedir.windows}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
 		              	  if $logging.debug
 		              	  	$logger.info($info.managed.provisioners.ansible.invoke % ssh_cmd)
 		              	  end

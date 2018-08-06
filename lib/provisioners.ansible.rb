@@ -15,7 +15,7 @@ module VenvProvisionersAnsible
       # Determine var folder
       vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host}"
       # Determine main vagrant_sync folder
-      sync_dir = $platform.is_windows ? $vagrant.windows_vagrant_synced_folder_basedir : "#{Dir.pwd()}"
+      sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
       # Create node-specific ansible var folder
       create_var_folder(vagrant_ansible_var_folder_real_path)
 
@@ -91,7 +91,7 @@ module VenvProvisionersAnsible
       # Determine var folder
       vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host}"
       # Determine main vagrant_sync folder
-      sync_dir = $platform.is_windows ? $vagrant.windows_vagrant_synced_folder_basedir : "./"
+      sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
 
       # Create node-specific ansible var folder
       create_var_folder(vagrant_ansible_var_folder_real_path)
