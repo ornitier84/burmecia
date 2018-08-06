@@ -30,7 +30,7 @@
     - local: |
         cmd /c "echo this is a local command on the vagrant controller"
     - shell: |
-        echo "This is a shell command on the vm/managed server"
+        apt-get install python
     - ansible:
         inventory: "./environments/contoso/inventory.yaml"
         gather_facts: true
