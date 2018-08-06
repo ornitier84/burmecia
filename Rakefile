@@ -9,20 +9,15 @@ task :u => :destroy
 
 task :init do
 	require_relative 'lib/misc'
-	# Platform
-	host_os = RbConfig::CONFIG['host_os'] # e.g. /darwin/, /linux/, /mingw/ (Windows cygwin)
-	platform_is_osx = true if host_os =~ /darwin/ || nil
-	platform_is_linux = true if host_os =~ /linux/ || nil
-	platform_is_windows = true if host_os =~ /mingw/ || nil	
 	# Load main config
 	config = YAMLTasks.new
 	config.parse('etc/config.yaml', 'settings')	
 	## Required plugins
-	required_plugins = []
-	if $platform.is_linux
-		required_plugins = $project.requirements.plugins['libvirt']
+	required_plugins = $project.requirements.plugins.mandatory
+  if $platform.is_linux
+    required_plugins += $project.requirements.plugins.libvirt
 	elsif [$platform.is_windows,$platform.is_osx].any?
-		required_plugins = $project.requirements.plugins['virtualbox']
+		required_plugins += $project.requirements.plugins.virtualbox
 	end
 	if not required_plugins.empty?
 		required_plugins.each do |plugin|

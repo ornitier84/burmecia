@@ -104,12 +104,19 @@ module VenvProvisionersAnsible
       if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?
         case ansible_hash['vars']
         when Hash
-          default_vars_hash = {'VAGRANT_SYNCED_DIR' => sync_dir}
+          default_vars_hash = {
+            'VAGRANT_SYNCED_DIR' => sync_dir,
+            'environment_basedir' => $environment.basedir,
+            'environment_context' => $environment.context
+          }
           vars_hash = {'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
         when Array
           default_vars_hash = { 'vars' =>
             [
-              {'VAGRANT_SYNCED_DIR' => sync_dir}
+              {'VAGRANT_SYNCED_DIR' => sync_dir,
+              'environment_basedir' => $environment.basedir,
+              'environment_context' => $environment.context
+              }
             ]
           }
           vars_hash = {'vars' => default_vars_hash['vars'].concat(ansible_hash['vars'])}

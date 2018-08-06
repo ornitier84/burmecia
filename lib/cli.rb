@@ -19,13 +19,8 @@ module VenvCLI
   class Node
 
     def initialize
-      if !$manged
-        require_relative 'networking'
-        require_relative 'machine'
-        require_relative 'managed'
-      end
       require_relative 'common'     
-      require_relative 'provision'      
+      require_relative 'provision'
       if $managed
         # Instantiate the vagrant managed node class 
         @managed_node = VenvManaged::Node.new
@@ -33,32 +28,39 @@ module VenvCLI
         @linked_machines = LinkedMachines.new
         # Instantiate the vagrant common class 
         @snode = VenvCommon::CLI.new      
-      else         
-        # Instantiate the vagrant network class 
+      else   
+        require_relative 'networking'
+        require_relative 'machine'
+        require_relative 'managed'
+        # Instantiate the vagrant network class
         @network = VenvNetworking::Network.new
-        # Instantiate the vagrant hardware class 
+        # Instantiate the vagrant hardware class
         @hardware = VenvMachine::Hardware.new
-        # Instantiate the vagrant syncedfolders class 
+        # Instantiate the vagrant syncedfolders class
         @syncedfolders = VenvMachine::SyncedFolders.new
-        # Instantiate the vagrant linked machines class 
+        # Instantiate the vagrant linked machines class
       end
-      @linked_machines = LinkedMachines.new      
-      # Instantiate the vagrant provision class 
-      @provisioners = VenvProvision::Provision.new      
-      # Instantiate the vagrant hardware class 
-      @node = VenvMachine::Controls.new    
+      @linked_machines = LinkedMachines.new
+      # Instantiate the vagrant provision class
+      @provisioners = VenvProvision::Provision.new
+      # Instantiate the vagrant hardware class
+      @controls = VenvMachine::Controls.new 
     end
 
     def down(node_object, machine)
-      @node.halt(node_object, machine)
+      @controls.halt(node_object, machine)
     end
 
     def up(node_object, node_set=nil, config=nil, machine=nil)
       # Remind me to specify libvirt hypervisor if we're on non-windows OS
       if [!$platform.is_windows, $debug].all?
         $logger.warn($warnings.libvirt_windows_os)
-      end   
+      end
       if $managed
+        #
+        # TODO
+        # Configure ssh settings for managed nodes
+        #
         status = get_managed_state(node_object)
         if status.to_s != 'reachable'
           $logger.error($errors.managed.not_reachable % node_object['name'])
@@ -76,7 +78,15 @@ module VenvCLI
             return false
           end
         end          
-      else       
+      else 
+        # Set hostname
+        machine.vm.hostname = node_object['name']
+        # Specify vagrant box
+        machine.vm.box = node_object['box']
+        # Define boot timeout
+        config.vm.boot_timeout = node_object['boot_timeout'] if node_object.key?('boot_timeout')        
+        # Define box download behavior
+        config.vm.box_download_insecure = $vagrant.box_download_insecure
         # Configure hardware
         @hardware.configure(config, node_object, machine)
         # Configure networking

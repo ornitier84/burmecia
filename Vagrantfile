@@ -37,26 +37,21 @@ if $managed_node_args
     node_set_managed = node_set_managed.select { |k, v| $managed_node_args.include?(k['name']) }
   end
 end
-# Instantiate the vagrant groups class
+# Instantiate the vagrant environments groups class
 groups = VenvEnvironment::Groups.new
 # Generate the group set
 @group_set = groups.generate(node_set)
+# Instantiate the vagrant machine settings class
+settings = VenvMachine::Settings.new
 # Process Virtual Machines
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  # ssh settings
-  config.ssh.private_key_path = [$vagrant.sshkey] 
-  config.ssh.insert_key = false
-
   node_set.each do |node_object|
+      # Configure ssh settings
+      settings.eval_ssh(node_object, config)
       # Read node autostart option
       autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : false
-      # Define boot timeout
-      config.vm.boot_timeout = node_object['boot_timeout'] if node_object.key?('boot_timeout')
-      config.vm.box_download_insecure = $vagrant.box_download_insecure
       # Define node
       config.vm.define node_object['name'], autostart: autostart_setting do |machine|
-        machine.vm.hostname = node_object['name']
-        machine.vm.box = node_object['box']
         if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
           node.down(node_object, machine) 
         elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
