@@ -1,7 +1,9 @@
 ---
 settings:
   ansible:
-    basedir: provisioners/ansible
+    paths:
+      basedir: provisioners/ansible
+      cfg: ansible.cfg
     surrogate: devel-ansible01
     vardir: ".vagrant/machines/%s/provisioners/ansible"
     default_include_statement: 'include'

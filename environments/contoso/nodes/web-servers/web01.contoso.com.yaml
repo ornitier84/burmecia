@@ -32,7 +32,7 @@
     - shell: |
         echo "This is a shell command on the vm/managed server"
     - ansible:
-        inventory: "<%= $vagrant.basedir.windows if $platform.is_windows else $vagrant.basedir.posix %>/environments/contoso/inventory.yaml"
+        inventory: "./environments/contoso/inventory.yaml"
         gather_facts: true
         become: True
         roles:

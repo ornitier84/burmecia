@@ -80,7 +80,7 @@ module VenvProvisioners
 		              # If the virtual host is running a Posix-Compliant OS, we run ansible locally on the VM host
 		              machine.vm.provision 'ansible' do |ansible|
 		                ansible.inventory_path = @inventory if @inventory
-		                ansible.config_file = "provisioners/ansible/ansible.cfg"
+		                ansible.config_file = $ansible.paths.cfg
 						# ansible.extra_vars = { clear_module_cache: true, ansible_ssh_user: 'vagrant' }
 					    # ansible.raw_ssh_args = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o IdentitiesOnly=yes'
 		                ansible.playbook = @playbook                
