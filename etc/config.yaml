@@ -8,6 +8,7 @@ settings:
     windows_helper_script: scripts/windows.ansible-playbook.sh
   environment:
     context_file: .vagrant/.environment_context
+    context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
     load_pattern: "nodes/**/*.yaml"
     basedir: environments
     nodesdir: nodes
@@ -42,9 +43,9 @@ settings:
         up: ".*(running|reachable)"
   # Platform detection
   platform:
-    is_windows: <%= Vagrant::Util::Platform.windows? || Vagrant::Util::Platform.cygwin? %>
-    is_osx: <%= Vagrant::Util::Platform.darwin? %>
-    is_linux: <%= Vagrant::Util::Platform.linux? %>
+    is_windows: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil %>
+    is_osx: <%= (/darwin/ =~ RUBY_PLATFORM) != nil %>
+    is_linux: <%= (/linux/ =~ RUBY_PLATFORM) != nil %>
   project:
     editor: 
       path: "C:\\progra~1\\SUBLIM~1\\subl.exe"
@@ -70,7 +71,7 @@ settings:
     basedir: provisioners/puppet
   starttime: "<%= Time.now %>"
   testing:
-    ternary: "<%= defined?(%{platform_is_windows}) ? :'ternary - true' : :'ternary - false' %>  "
+    ternary: "<%= defined?(%{somevar}) ? :'ternary - true' : :'ternary - false' %>  "
   user:
     homedir: "<%= File.expand_path('~') %>"
     name: "<%= ENV['USER'] || ENV['USERNAME'] %>"
@@ -95,7 +96,11 @@ settings:
       - 'virtualbox'
     is_true: true
     box_download_insecure: true
-    sshkey: 'etc/sshkeys/vagrantkey'
+    ssh:
+      private_key_path:
+        - 'etc/sshkeys/vagrantkey'
+      insert_key: false
+      username: vagrant
     no_mount_vagrant: false
     # disable nfs for windows vhosts (for now)
     # see https://github.com/winnfsd/vagrant-winnfsd/issues/53
@@ -110,7 +115,8 @@ settings:
     vm_network_default_mode: 'private_network'
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
-    local_data_dir: "<%= Vagrant::Environment::DEFAULT_LOCAL_DATA %>"
+    local_data_dir: "<%= defined?(%{Vagrant}) ? :"#{Vagrant::Environment::DEFAULT_LOCAL_DATA}" : :".vagrant" %>"
+    # Vagrant::Environment::DEFAULT_LOCAL_DATA
     windows_vagrant_synced_folder_basedir: '/vagrant'
     vcpu_minimum: 1
     vmem_minimum: 512
