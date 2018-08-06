@@ -144,10 +144,16 @@ get_linux_distribution() {
 
     echo "vyos"
 
-  elif [ -f '/etc/redhat-release' ]; then
+  elif [[ ( -f '/etc/redhat-release' ) && ! ( -f '/etc/oracle-release' ) ]]; then
 
     # RedHat-based distributions
     cut --fields=1 --delimiter=' ' '/etc/redhat-release' \
+      | tr "[:upper:]" "[:lower:]"
+
+  elif [ -f '/etc/oracle-release' ]; then
+
+    # Oracle-based distributions
+    cut --fields=1 --delimiter=' ' '/etc/oracle-release' \
       | tr "[:upper:]" "[:lower:]"
 
   elif [ -f '/etc/lsb-release' ]; then
@@ -165,6 +171,16 @@ get_linux_distribution() {
 install_ansible_fedora() {
   info "Fedora: installing Ansible from distribution repositories"
   dnf -y install ansible
+}
+
+# Install Ansible on a CentOS system from EPEL
+install_ansible_oracle() {
+  info "Oracle: installing EPEL "
+  if [[ "$(awk '{print $NF}' /etc/oracle-release)" =~ 7.* ]];then
+    rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    yum update 
+    yum install -y ansible
+  fi
 }
 
 # Install Ansible on a CentOS system from EPEL
