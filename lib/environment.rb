@@ -2,6 +2,12 @@ module VenvEnvironment
 
 class Context
 
+  def initialize
+    if ARGV.include?("environment") and ["create", "list"].all? { |arg| ARGV.include? arg }
+        exit
+    end
+  end
+
   def set()
 
     if ["environment", "activate"].all? { |arg| ARGV.include? arg }
@@ -21,7 +27,8 @@ class Context
       end    
       $logger.info($info.completion.done)
       exit
-    end    
+    end
+
   end
 
   def get()
@@ -40,12 +47,12 @@ class Context
     # Instantiate the vagrant environments nodes class
     nodes = Nodes.new    
     if environment_context == 'all'
-      environment_load_pattern = "#{$environment.basedir}/**/#{$environment.load_pattern}"
-      node_set = nodes.generate(environment_load_pattern, managed: managed)
+      environment_path = "#{$environment.basedir}"
+      node_set = nodes.generate(environment_path, managed: managed)
       return node_set      
     else
-      environment_load_pattern = "#{$environment.basedir}/#{environment_context}/**/#{$environment.load_pattern}"
-      node_set = nodes.generate(environment_load_pattern, managed: managed)
+      environment_path = "#{$environment.basedir}/#{environment_context}/#{$environment.nodesdir}"
+      node_set = nodes.generate(environment_path, managed: managed)
       return node_set
     end   
   end
@@ -56,19 +63,27 @@ class Nodes
 
   def initialize
     require 'erb'
+    require 'find'
     require 'yaml'
   end
   
 
-  def generate(environment_load_pattern, list_hosts_only=false, managed: false)
+  def generate(environment_path, list_hosts_only=false, managed: false)
     # Verify the environment path exists
-    environment_path_parent = environment_load_pattern.split(File::SEPARATOR).first
+    environment_path_parent = environment_path.split(File::SEPARATOR).first
+    exclude_paths = Regexp.union($environment.node.definitions.exclude_paths)
+    exclude_files = Regexp.union($environment.node.definitions.exclude_files)
+    include_files = Regexp.new($environment.node.definitions.include_files)
     if !File.exist?(environment_path_parent)
       $logger.error($errors.environment.path.notfound % environment_path_parent) if $logger
     end
     if list_hosts_only
+      # Read node yaml definitions
       hosts = []
-      Dir.glob(environment_load_pattern).each do |f|
+      Find.find(environment_path) do |f|
+        node_folder = File.dirname(f).split(File::SEPARATOR)[-1]
+        Find.prune if node_folder.match(exclude_paths)
+        next unless f.match(include_files)
         hosts.push(File.basename(f,".*"))
       end
       return hosts
@@ -76,9 +91,23 @@ class Nodes
       # Read-in node definitions
       node_set = []
       node_names = []
+
       # Read node yaml definitions
-      Dir.glob(environment_load_pattern).each do |f|
+      Find.find(environment_path) do |f|
         node_folder = File.dirname(f).split(File::SEPARATOR)[-1]
+        node_folder_parent = File.dirname(f).split(File::SEPARATOR)[2]
+        environment_path_fq = File.expand_path("../..", File.dirname(f))
+        # skip anything we don't like, as defined in config.yaml
+        if !node_folder.nil?
+          Find.prune if node_folder.match(exclude_paths)
+        end
+        if !node_folder_parent.nil?
+          Find.prune if node_folder_parent.match(exclude_paths)
+        end
+        next unless f.match(include_files)
+        next unless !f.match(exclude_files)
+
+        # start reading through the pruned yaml files
         begin
           y = YAML.load(ERB.new(File.read(f)).result)
         rescue Exception => e
@@ -104,6 +133,10 @@ class Nodes
             y.first[k] = v
           end
         end
+        # Populate node environment keys
+        y.first['environment_path'] = environment_path_fq
+        # Populate node definition key
+        y.first['node_definition_path'] = File.dirname(f)
         node_name = node_definition['name']
         if node_names.include? node_name
           $logger.warn($warnings.definition.skipping % [f, "Duplicate node name: #{node_name}"]) if $logger

@@ -49,16 +49,16 @@ module VenvInventory
       # Instantiate the vagrant nodes class
       nodes = VenvEnvironment::Nodes.new
       # Define the environment path
-      environment_path = environment == 'all' ?
+      environments_path = environment == 'all' ?
         $environment.basedir : "#{$environment.basedir}/#{environment}"
-      if not File.exist?(environment_path)
-        $logger.error($errors.inventory.path.notfound % environment_path)
+      if not File.exist?(environments_path)
+        $logger.error($errors.inventory.path.notfound % environments_path)
       end
       # Define the load pattern for reading yaml files
-      load_pattern = environment == 'all' ?
-        "#{$environment.basedir}/**/#{$environment.load_pattern}" : "#{$environment.basedir}/#{environment}/#{$environment.load_pattern}"
+      environment_path = environment == 'all' ?
+        "#{$environment.basedir}/#{$environment.nodesdir}" : "#{$environment.basedir}/#{environment}/#{$environment.nodesdir}"
       # Derive the node/group set
-      node_set = nodes.generate("#{load_pattern}")
+      node_set = nodes.generate("#{environment_path}")
       group_set = groups.generate(node_set)
       #
       # Build the ansible inventory hash
@@ -75,8 +75,8 @@ module VenvInventory
         all['all']['children'][group[0]]['hosts'] = Hash[group[1].collect {|node| [node, nil] }]
       }
       # Write the ansible inventory file from the yaml-formatted hash
-      $logger.info($info.inventory.file.write % "#{environment_path}/inventory.yaml")
-      File.open("#{environment_path}/inventory.yaml","w") do |file|
+      $logger.info($info.inventory.file.write % "#{environments_path}/inventory.yaml")
+      File.open("#{environments_path}/inventory.yaml","w") do |file|
         file.write all.to_yaml(line_width: -1)
       end
       $logger.info($info.completion.done)

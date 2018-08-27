@@ -6,18 +6,30 @@ settings:
       cfg: ansible.cfg
     surrogate: devel-ansible01
     vardir: ".vagrant/machines/%s/provisioners/ansible"
-    default_include_statement: 'include'
+    default_include_statement: 'import_playbook'
     windows_helper_script: scripts/windows.ansible-playbook.sh
   environment:
     context_file: .vagrant/.environment_context
     context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
-    load_pattern: "nodes/**/*.yaml"
+    node:
+      definitions:
+        exclude_paths: 
+          - playbooks
+          - templates
+          - group_vars
+          - host_vars
+          - templates
+          - files
+        include_files: .*.\.yaml
+        exclude_files:
+          - inventory.yaml
+          - inventory.yml
     basedir: environments
-    nodesdir: nodes
+    nodesdir: machines
     skeleton:
       - group_vars/all
       - host_vars
-      - nodes
+      - machines
       - templates
     sizing:
       small:

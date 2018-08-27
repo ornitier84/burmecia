@@ -52,6 +52,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : false
       # Define node
       config.vm.define node_object['name'], autostart: autostart_setting do |machine|
+        # Set hostname
+        machine.vm.hostname = node_object['name']
+        # Specify vagrant box
+        machine.vm.box = node_object['box']        
         if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
           node.down(node_object, machine) 
         elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
