@@ -180,6 +180,10 @@ install_ansible_oracle() {
     rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     yum update 
     yum install -y ansible
+  elif [[ "$(awk '{print $NF}' /etc/oracle-release)" =~ 6.* ]];then
+    rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+    yum update 
+    yum install -y ansible
   fi
 }
 

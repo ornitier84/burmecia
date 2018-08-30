@@ -8,6 +8,8 @@ settings:
     vardir: ".vagrant/machines/%s/provisioners/ansible"
     default_include_statement: 'import_playbook'
     windows_helper_script: scripts/windows.ansible-playbook.sh
+    scratch:
+      playbook_name: playbook.scratch.yaml    
   environment:
     context_file: .vagrant/.environment_context
     context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
@@ -15,7 +17,7 @@ settings:
       definitions:
         exclude_paths: 
           - playbooks
-          - templates
+          - roles
           - group_vars
           - host_vars
           - templates
