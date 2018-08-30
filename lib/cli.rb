@@ -79,10 +79,6 @@ module VenvCLI
           end
         end          
       else 
-        # Set hostname
-        machine.vm.hostname = node_object['name']
-        # Specify vagrant box
-        machine.vm.box = node_object['box']
         # Define boot timeout
         config.vm.boot_timeout = node_object['boot_timeout'] if node_object.key?('boot_timeout')        
         # Define box download behavior

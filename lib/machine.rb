@@ -158,7 +158,6 @@ module VenvMachine
 			      end
 			    end
 			  end # config.vm.provider
-
 		  end
 	
 		  # Configure Provider Options

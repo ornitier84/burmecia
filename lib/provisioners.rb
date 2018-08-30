@@ -17,7 +17,6 @@ module VenvProvisioners
 		        node_object["provisioners"].each do |provisioner|
 		          provisioner_name = provisioner.keys.first()
 		          if provisioner_name == "ansible"
-		            ######Inventory Logic#BEGIN
 		            # Check for an inventory file specification
 		            if provisioner[provisioner_name].key?("inventory")
 		                if $platform.is_windows
@@ -34,12 +33,10 @@ module VenvProvisioners
 		                "#{$vagrant.basedir.windows}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
 		                "#{$vagrant.basedir.posix}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
 		            end
-		            ######Inventory Logic#END
-		            ##################################################
-		            ######IFWINDOWS#BEGIN
-		            # If the virtual host is running a Windows OS, we run ansible locally on the VM
 		            # Write the dynamic playbook
-		            @playbook = playbook.write(node_object['name'], provisioner)
+		            # If the virtual host is running a Windows OS, we run ansible locally on the VM
+		            # ----------
+		            @playbook = playbook.write(node_object, provisioner)
 		            if $platform.is_windows
 		              groups = node_object.key?('groups') ? 
 		              node_object['groups'].map { |g| "#{g}" }.join(":") : false		              	
@@ -75,18 +72,20 @@ module VenvProvisioners
 			                sh.name = $ansible.windows_helper_script
 			              end
 			          end
-		            ######IFWINDOWS#END
+		              # ^^^^^^^^^^
 		            else
 		              # If the virtual host is running a Posix-Compliant OS, we run ansible locally on the VM host
+		              # ----------
 		              machine.vm.provision 'ansible' do |ansible|
 		                ansible.inventory_path = @inventory if @inventory
-		                ansible.config_file = "provisioners/ansible/ansible.cfg"
+		                ansible.config_file = $ansible.paths.cfg
 						# ansible.extra_vars = { clear_module_cache: true, ansible_ssh_user: 'vagrant' }
 					    # ansible.raw_ssh_args = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o IdentitiesOnly=yes'
 		                ansible.playbook = @playbook                
 		                ansible.groups = @group_set
 		                ansible.become = true
 		              end
+		              # ^^^^^^^^^^
 		          end
 		        end
 		      end

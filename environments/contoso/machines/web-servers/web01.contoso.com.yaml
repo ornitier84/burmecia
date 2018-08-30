@@ -18,7 +18,7 @@
       controller: "SATA Controller"
   synced_folders:
     - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\git: '/usr/share/git'
-    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents\workspace: '/home/vagrant/Documents/workspace'
+    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents: '/home/vagrant/Documents'
   provider_options:
     virtualbox:
       modifyvm:
@@ -30,9 +30,9 @@
     - local: |
         cmd /c "echo this is a local command on the vagrant controller"
     - shell: |
-        echo "This is a shell command on the vm/managed server"
+        test $(which python) || apt-get install -y python
     - ansible:
-        inventory: "<%= $vagrant.basedir.windows if $platform.is_windows else $vagrant.basedir.posix %>/environments/contoso/inventory.yaml"
+        inventory: "./environments/contoso/inventory.yaml"
         gather_facts: true
         become: True
         roles:
@@ -41,6 +41,9 @@
             become_user: root          
         tasks:
           
+          - name: includes | Include the Hello Playbook
+            include_tasks: web01.contoso.com/playbooks/hello.yaml
+            
           - name: Install apache2
             apt: 
               name: apache2 

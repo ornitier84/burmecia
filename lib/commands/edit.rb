@@ -22,7 +22,7 @@ opt_parser.parse!
 case
 when ARGV[2] == "playbook"
   machine = ARGV[-2]
-  file_obj = "./#{$vagrant.local_data_dir}/machines/#{machine}/provisioners/ansible/dynamic_playbook.yaml"          
+  file_obj = "./#{$vagrant.local_data_dir}/machines/#{machine}/provisioners/ansible/$ansible.scratch.playbook_name"
 when [ARGV[2] == "definition", options.key?(:environment), options.key?(:group)].all?
   file_obj = "#{$environment.basedir}/#{options[:environment]}/#{$environment.nodesdir}/#{options[:group]}/#{ARGV[-2]}.yaml"
 else

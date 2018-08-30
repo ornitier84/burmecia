@@ -29,7 +29,10 @@ module VenvNetworking
               node_set.each do |h|
                 if h.key?('interfaces') and !h['interfaces'].nil?
                   h['interfaces'].each do |interface|
-                    provisioner.add_host interface['ip'], [h['name']] if interface['ip'] and interface.is_a?(Hash)
+                    if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all?
+                      next unless interface['exclude_from_hosts'] == false
+                      provisioner.add_host interface['ip'], [h['name']] if interface['ip'] and interface.is_a?(Hash)
+                    end
                   end
                 end
               end

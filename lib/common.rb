@@ -68,13 +68,13 @@ module VenvCommon
     def ssh_singleton(node_object, args='')
         #TODO Dedupe this block
         if $managed and node_object['name'] != $ansible.surrogate
-        	if node_object['ssh'].key?('options')
-				ssh_options = node_object['ssh']['options'].map { |k| "-o #{k}" }.join (' ')        		
+        	if node_object['ssh'].key?('extra_args')
+				ssh_options = node_object['ssh']['extra_args'].map { |k| "-o #{k}" }.join (' ')        		
 	        else
 	        	ssh_options = "-o ''"
 	        end
 	        ssh_args = [
-	      	"#{node_object['ssh']['user']}@#{node_object['name']}",
+	      	"#{node_object['ssh']['username']}@#{node_object['name']}",
 	      	"-i",
 	      	"#{node_object['ssh']['private_key_path']}",
 	      	"-p #{node_object['ssh']['port']}",

@@ -5,7 +5,7 @@ module VenvProvisionersAnsible
   class Playbook
 
     def create_var_folder(var_path)
-      if not File.exist?(var_path)                  
+      if not File.exist?(var_path)
         FileUtils::mkdir_p var_path
       end
     end
@@ -13,7 +13,7 @@ module VenvProvisionersAnsible
     def write(host, provisioner)
 
       # Determine var folder
-      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host}"
+      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host['name']}"
       # Determine main vagrant_sync folder
       sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
       # Create node-specific ansible var folder
@@ -51,13 +51,13 @@ module VenvProvisionersAnsible
             playbook_list = []
           end
           ######Parse Playbooks#END
-          dynamic_playbook = _write(host, provisioner['ansible'])
-          playbook_list.push({$ansible.default_include_statement => dynamic_playbook})
+          scratch_playbook = _write(host, provisioner['ansible'])
+          playbook_list.push({$ansible.default_include_statement => scratch_playbook})
           playbook_obj = playbook_list
         else
-          # Write the dynamic playbook
-          dynamic_playbook = _write(host, provisioner['ansible'])
-          playbook_obj = [{$ansible.default_include_statement => dynamic_playbook}]
+          # Write the scratch playbook
+          scratch_playbook = _write(host, provisioner['ansible'])
+          playbook_obj = [{$ansible.default_include_statement => scratch_playbook}]
       end 
     ######Check for playbook specification#END
       case playbook_obj
@@ -67,6 +67,20 @@ module VenvProvisionersAnsible
         playbook_hash = ''
       end
       
+      # Copy any machine-specific playbooks to the ansible scratch space
+      # TODO Move away from copying file objects, 
+      # and instead program a set of logic to 
+      # dynamiclally reference these files
+      ansible_extra_objects_dir = "#{host['node_definition_path']}/#{host['name']}"
+      if [File.exist?(ansible_extra_objects_dir), File.directory?(ansible_extra_objects_dir)].all?
+        begin
+          FileUtils.cp_r(ansible_extra_objects_dir, vagrant_ansible_var_folder_real_path)
+        rescue Exception => e
+          $logger.error($errors.fso.operations.failure % e)
+        end
+      end
+
+      # Write the main playbook file
       main_playbook_file = "#{vagrant_ansible_var_folder_real_path}/main.yaml"
       
       $logger.info "Writing #{main_playbook_file}" if @debug
@@ -89,14 +103,14 @@ module VenvProvisionersAnsible
       # TODO 
       # Conform to DRY Method
       # Determine var folder
-      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host}"
+      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host['name']}"
       # Determine main vagrant_sync folder
       sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
 
       # Create node-specific ansible var folder
       create_var_folder(vagrant_ansible_var_folder_real_path)
       
-      playbook_hash = { 'hosts' => host }
+      playbook_hash = { 'hosts' => host['name'] }
       # YAML representation:
       # vars:
       #   VAGRANT_SYNCED_DIR: some/path  
@@ -131,15 +145,15 @@ module VenvProvisionersAnsible
       when Hash
         merged_ansible_hash = vars_hash.is_a?(Hash) ? 
           vars_hash.merge!(ansible_hash) : ansible_hash
-        merged_playbook_hash = [ { 'hosts' => host }.merge!(merged_ansible_hash) ]
-        # Define the dynamic playbook from the host perspective
-        playbook_file = "#{vagrant_ansible_var_folder_real_path}/dynamic_playbook.yaml"
+        merged_playbook_hash = [ { 'hosts' => host['name'] }.merge!(merged_ansible_hash) ]
+        # Define the scratch playbook from the host perspective
+        playbook_file = "#{vagrant_ansible_var_folder_real_path}/#{$ansible.scratch.playbook_name}"
         File.open(playbook_file,"w") do |file|
           file.write merged_playbook_hash.to_yaml(line_width: -1)
         end
-        # Define the dynamic playbook from the vm perspective
+        # Define the scratch playbook from the vm perspective
         vagrant_ansible_var_folder = "#{sync_dir}/#{vagrant_ansible_var_folder_real_path}"
-        return "dynamic_playbook.yaml"    
+        return $ansible.scratch.playbook_name
       else
         raise("This #{ansible_hash} ... is not a HASH")
       end
