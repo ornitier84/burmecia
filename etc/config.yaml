@@ -55,7 +55,7 @@ settings:
         memory: 4096
         vcpu: 4
   logging:
-    debug: true
+    debug: false
     logs_dir: ".vagrant/var/log"
   managed_nodes:
     required_keys:
@@ -139,7 +139,7 @@ settings:
     vm_network_default_mode: 'private_network'
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
-    local_data_dir: "<%= defined?(%{Vagrant}) ? :"#{Vagrant::Environment::DEFAULT_LOCAL_DATA}" : :".vagrant" %>"
+    local_data_dir: ".vagrant"
     basedir:
       posix: '.'
       windows: '/vagrant'

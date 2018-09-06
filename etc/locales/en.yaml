@@ -111,7 +111,8 @@ strings:
           The environment path you specified (%s) was not found.
           Because of this failure in node definitions, 
           Your nodes will not be listed and available for interaction.
-
+          Activate an existing environment to clear this error, e.g.
+          vagrant activate contoso
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check
@@ -157,7 +158,7 @@ strings:
       Something went terribly wrong
       Try calling the the same command, but this time, precede it with the 'debug' keyword
     loaderror: |-
-      There was a problem loading a required library
+      There was a problem loading at least one required library
       You may experience unexpected results!
       Error was: %s
-      For the full backtrace, issue the same vagrant command but this time, precede it with the 'debug' keyword
+      For the full backtrace, set the debug option in config.yaml to 'true'

@@ -12,18 +12,13 @@ require 'yaml'
 #
 Vagrant.require_version "#{$vagrant.require_version}"
 VAGRANTFILE_API_VERSION = $vagrant.api_version
-# Instantiate the vagrant cli inventory class
-inventory = VenvCLI::Inventory.new
-# Write inventory file(s) if applicable
-inventory.create($environment_context)
-# Instantiate the vagrant environments context class
-context = VenvEnvironment::Context.new
-# Set environment context (if applicable)
-context.set()
+
 # Instantiate the vagrant cli node class
 node = VenvCLI::Node.new
+# Instantiate the vagrant environments context class
+context = VenvEnvironment::Context.new
 # Get environment context (if applicable)
-environment_context = context.get()
+environment_context = context.get
 # Generate the node set
 node_set = context.activate(environment_context)
 # Instantiate the vagrant cli group class

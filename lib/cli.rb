@@ -157,24 +157,4 @@ module VenvCLI
 
   end
 
-  class Inventory
-
-    def initialize()
-      require_relative 'inventory'
-      @inventory = VenvInventory::Inventory.new
-    end
-    
-    def create(environment)
-      if [$environment_context != 'all', (ARGV.include? 'inventory')].all?
-        begin
-          @inventory.write(environment)
-        rescue Exception => e
-          $logger.error($errors.inventory.file.error % e)
-        end
-        exit
-      end      
-    end
-
-  end
-
 end

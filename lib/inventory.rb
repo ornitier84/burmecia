@@ -42,7 +42,7 @@ module VenvInventory
       return @vars_dict
     end
 
-    def write(environment='all')  
+    def write(environment='all')
       require_relative 'environment'
       # Instantiate the vagrant groups class
       groups = VenvEnvironment::Groups.new

@@ -1,4 +1,5 @@
 # Sets environment context for writing inventory yaml file relevant to specified environment
+$environment_context = "all";
 options = {}
 opt_parser = OptionParser.new do |opt|
   opt.banner = "Usage: vagrant inventory ACTION ENVIRONMENT"
@@ -12,18 +13,13 @@ opt_parser = OptionParser.new do |opt|
 end
 opt_parser.parse!
 case ARGV[1]
-when "create"
-  require File.expand_path("../lib/inventory.rb", __FILE__)
-  environment_context = ARGV[-1] != 'create' ? ARGV[-1] : 'all'
-  inventory = VenvInventory::Inventory.new
-  if [environment_context != 'all', (ARGV.include? 'inventory')].all?
-    begin
-      inventory.write(environment_context)
-    rescue Exception => e
-      $logger.error($errors.inventory.file.error % e)
-    end
-    exit
-  end      
+when "init"
+  require 'open3'
+  bin_path = Vagrant::Util::Which.which("rake").split(File::SEPARATOR).first
+  rake_exe = "#{bin_path}\\rake"
+  ruby_exe = "#{bin_path}\\ruby.exe"
+  cmd = "#{ruby_exe} #{rake_exe} init"
+  puts "Run this command: #{cmd}"
 else
   puts opt_parser
 end

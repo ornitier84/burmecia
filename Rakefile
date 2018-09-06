@@ -34,16 +34,25 @@ task :destroy do
   system("vagrant destroy --force")
 end
 
+desc "say hello"
+task :hello do
+  system("echo hello")
+end
+
 desc "Run tests"
 task :tests do
   system("echo Running vagrant tests ...")
   timestamp = Time.now.utc.strftime('%Y%m%d%H%M%S')
+  environment_context_file = ".vagrant/.environment_context"
+  current_context = File.read(environment_context_file) rescue 'all'
   system("echo Testing environment create")
   system("vagrant environment create dummy-#{timestamp}")
   system("echo Testing environment activate")
   system("vagrant environment activate dummy-#{timestamp}")
   system("echo Testing node create")
   system("vagrant node create -e dummy-#{timestamp} -n dummy-#{timestamp} -g dummy")
+  system("echo Testing vagrant inventory create")
+  system("vagrant inventory create dummy-#{timestamp}")
   system("echo Testing vagrant status")
   system("vagrant status")
   system("echo Testing vagrant up")
@@ -54,6 +63,8 @@ task :tests do
   system("vagrant destroy dummy-#{timestamp} --force")
   system("echo Testing vagrant environment remove with --force")
   system("vagrant environment remove dummy-#{timestamp} --force")
+  system("echo activating previously active environment")
+  system("vagrant environment activate #{current_context}")
 end
 
 def assert_execution(condition)

@@ -3,40 +3,25 @@ module VenvEnvironment
 class Context
 
   def initialize
-    if ARGV.include?("environment") and ["create", "list"].all? { |arg| ARGV.include? arg }
-        exit
-    end
-  end
-
-  def set()
-
-    if ["environment", "activate"].all? { |arg| ARGV.include? arg }
-      if $environment_context
-        # Get the environment path
-        environment_path = $environment_context == 'all' ?
-        $environment.basedir : "#{$environment.basedir}/#{$environment_context}"
-        $logger.info($info.environment.activate % [$environment_context, $environment.context_file])
-        if !File.exist?(environment_path)
-          $logger.error($errors.environment.path.notfound % environment_path)
-          exit
-        else
-          File.open($environment.context_file,"w") do |file|
-            file.write $environment_context
-          end
-        end
-      end    
-      $logger.info($info.completion.done)
+    if ARGV[0] == 'environment'
       exit
     end
-
   end
 
   def get()
     
     # Determine environment context (if applicable)
-    if File.exist?($environment.context_file) and $environment_context != 'all'
+    if File.exist?($environment.context_file)
       environment = File.read($environment.context_file)
-      return environment
+      environment_path = environment == 'all' ?
+      $environment.basedir : "#{$environment.basedir}/#{environment}"      
+      if !File.exist?(environment_path)
+        puts 'fuckkkk'
+        $logger.error($errors.environment.path.notfound % environment_path)
+        exit
+      else      
+        return environment
+      end
     else
       return "all"
     end
