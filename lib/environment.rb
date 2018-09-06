@@ -15,7 +15,7 @@ class Context
         # Get the environment path
         environment_path = $environment_context == 'all' ?
         $environment.basedir : "#{$environment.basedir}/#{$environment_context}"
-        $logger.info($info.environment.activate % $environment_context)
+        $logger.info($info.environment.activate % [$environment_context, $environment.context_file])
         if !File.exist?(environment_path)
           $logger.error($errors.environment.path.notfound % environment_path)
           exit

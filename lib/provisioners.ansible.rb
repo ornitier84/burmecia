@@ -2,6 +2,33 @@ module VenvProvisionersAnsible
 
   require 'yaml'
 
+  class Settings
+
+    def eval_ansible(node_object, ansible)
+      # if ARGV[-1] != node_object['name']
+      #   return false
+      # end
+      # per-machine ansible settings
+      if node_object.key?("ansible") and !node_object['ansible'].nil?
+          node_object['ansible'].each_pair do |item, value|
+          ansible.send("#{item}=", value)
+        end
+      end
+      # global ansible settings
+      $ansible.options.each_pair do |item, value|
+        if !value.nil?
+          if node_object.key?("ansible") and !node_object['ansible'].nil?
+            if !node_object["ansible"].key?(item.to_s)
+              ansible.send("#{item}=", value)
+            end
+          else
+            ansible.send("#{item}=", value)
+          end
+        end
+      end
+    end
+  end  
+
   class Playbook
 
     def create_var_folder(var_path)

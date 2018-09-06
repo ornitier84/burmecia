@@ -21,7 +21,9 @@ module VenvCLI
     def initialize
       require_relative 'common'     
       require_relative 'provision'
+      require_relative 'machine'
       if $managed
+        require_relative 'managed'
         # Instantiate the vagrant managed node class 
         @managed_node = VenvManaged::Node.new
         # Instantiate the vagrant linked machines class 
@@ -30,8 +32,6 @@ module VenvCLI
         @snode = VenvCommon::CLI.new      
       else   
         require_relative 'networking'
-        require_relative 'machine'
-        require_relative 'managed'
         # Instantiate the vagrant network class
         @network = VenvNetworking::Network.new
         # Instantiate the vagrant hardware class
@@ -51,7 +51,7 @@ module VenvCLI
       @controls.halt(node_object, machine)
     end
 
-    def up(node_object, node_set=nil, config=nil, machine=nil)
+    def up(node_object, node_set=nil, config=nil, machine=nil, target_machine=nil)
       # Remind me to specify libvirt hypervisor if we're on non-windows OS
       if [!$platform.is_windows, $debug].all?
         $logger.warn($warnings.libvirt_windows_os)
@@ -91,7 +91,7 @@ module VenvCLI
         @syncedfolders.configure(node_object, machine)
       end
       # Provision Machine if applicable
-      no_provision = [$no_provision, node_object['provision'] == 'false', (ARGV.include? "--no-provision")].any?
+      no_provision = [$no_provision, node_object['provision'] == 'false', (ARGV.include? "--no-provision"), node_object['name'] == target_machine].any?
       unless no_provision
         if $managed
           provision(node_object)
@@ -104,6 +104,7 @@ module VenvCLI
     end
 
     def provision(node_object, machine=nil)
+      # TODO Move these hardcoded values to config.yaml
       machine_dir = "#{Dir.pwd}/#{$vagrant.local_data_dir}/machines/#{node_object['name']}/#{$provider_name}"
       is_provisioned = File.exist?("#{machine_dir}/action_provision")
       if ARGV.include? 'up' and !is_provisioned

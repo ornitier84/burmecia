@@ -23,6 +23,7 @@ strings:
     environment:
       activate: |-
         Activating vagrant environment %s
+        Environment context file is %s.
     inventory:
       file:
         write: |-
