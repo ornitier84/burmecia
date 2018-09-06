@@ -14,7 +14,7 @@ end
 opt_parser.parse!
 case ARGV[1]
 when "create"
-  $environment_context = ARGV[2]
+  $environment_context = ARGV[-1]
 else
   puts opt_parser
 end

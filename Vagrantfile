@@ -28,6 +28,10 @@ environment_context = context.get()
 node_set = context.activate(environment_context)
 # Instantiate the vagrant cli group class
 group = VenvCLI::Group.new
+# Are we targeting a single machine?
+target_machine = node_set.select { |k, v| k['name'] == ARGV[-1] }
+# Are we provisioning all machines?
+all_machines = true if ARGV[-1] == 'provision' and [target_machine.nil?, target_machine.empty?].any?
 # Boot up node groups if applicable
 group.up(node_set)
 # Treat managed/bare metal nodes
@@ -59,7 +63,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
           node.down(node_object, machine) 
         elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
-          node.up(node_object, node_set, config, machine)
+          node.up(node_object, node_set, config, machine, target_machine)
         end
       end
   end

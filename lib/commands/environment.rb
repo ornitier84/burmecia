@@ -21,9 +21,9 @@ end
 opt_parser.parse!
 case ARGV[1]
 when "activate"
-  $environment_context = ARGV[2]
+  $environment_context = ARGV[-1]
 when "create"
-  $environment_context = ARGV[2]
+  $environment_context = ARGV[-1]
   environment_folder = "#{$environment.basedir}/#{$environment_context}"
   if File.exist?(environment_folder)
     abort "Abort. Existing environment folder found: #{environment_folder}"
@@ -44,7 +44,7 @@ when "list"
   }
 when "remove"
   prompt = VenvCommon::Prompt.new
-  $environment_context = ARGV[2]
+  $environment_context = ARGV[-1]
   environment_folder = "#{$environment.basedir}/#{$environment_context}"
   unless options.key?(:force)
     abort("aborted!") if prompt.ask("Are you sure you want to remove and delete #{environment_folder}?", ['y', 'n']) == 'n'

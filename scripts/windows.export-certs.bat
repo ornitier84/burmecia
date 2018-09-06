@@ -18,9 +18,12 @@
 Set-ExecutionPolicy Bypass -Scope Process -Force
 $bySubject = $ARGS[0]
 $dest =  If ($ARGS[1]) {$ARGS[1]} Else {"C:\temp"}
-If (-Not (Test-Path $dest)) {
-    New-Item -Path "$($dest)" -ItemType directory
-} 
+$checkfile = $ARGS[2]
+If ($checkfile){
+    If ((Test-Path $checkfile)) {
+        EXIT;
+    } 
+}
 $type = [System.Security.Cryptography.X509Certificates.X509ContentType]::Cert
 $stores = @("Root", "CA")
 foreach($store in $stores){
