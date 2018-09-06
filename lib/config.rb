@@ -63,6 +63,7 @@ end
 # vagrant-hosts plugin
 #
 $project.requirements.plugins.mandatory.each do |plugin|
+	puts "Attempting to load #{plugin}"
 	begin
 		require "#{plugin}" 
 	rescue Exception => err
