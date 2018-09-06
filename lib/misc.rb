@@ -42,4 +42,36 @@ class YAMLTasks
 	end
   end
 
+  def join(yamlfile, toplevelkey)
+	# check for vagrant config file
+	if File.exist?(yamlfile)
+			begin
+				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result)
+			rescue Exception => e
+				warn("#{yaml_config} fails yaml syntax check!")
+				raise("Error was #{e}")
+			end
+	else
+		raise("Could not find config file! #{yamlfile}")
+	end
+	# check for toplevelkey section in config file and evaluate variables
+	if !yaml_config[toplevelkey].nil?
+		yaml_config[toplevelkey].each do |c,s|
+			if yaml_config[toplevelkey][c].is_a?(Hash)
+				yaml_config[toplevelkey][c].each_pair do |item, value|
+					if value.is_a?(Hash)
+						eval "$#{c}.#{item} = #{value}.to_o"
+					else
+						eval "$#{c}.#{item} = '#{value}'"
+					end
+		      	end				
+			else
+				eval "$#{c} = '#{s}'"
+			end
+		end
+	else
+		raise("No #{toplevelkey} key found in your #{yamlfile}. Consult #{yamlfile}.yaml.sample or the README")
+	end
+  end
+
 end

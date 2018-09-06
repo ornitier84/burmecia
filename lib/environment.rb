@@ -6,6 +6,23 @@ class Context
     if ARGV[0] == 'environment'
       exit
     end
+    require_relative 'misc'
+    @env_config = YAMLTasks.new
+  end
+
+  def join(environment_context)
+    
+    # Determine environment path
+    environment_path = environment_context == 'all' ?
+    $environment.basedir : "#{$environment.basedir}/#{environment_context}"
+    
+    # Load environment-specific config, initialize variables in global scope
+    environment_config_file = "#{environment_path}/config.yaml"
+    if File.exist?(environment_config_file)
+      @env_config.join(environment_config_file, 'settings')
+      environment = File.read($environment.context_file)
+    end
+
   end
 
   def get()

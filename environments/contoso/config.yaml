@@ -1,0 +1,4 @@
+---
+settings:
+  ansible:
+    surrogate: ansible-controller

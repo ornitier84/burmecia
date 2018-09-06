@@ -11,7 +11,6 @@ require 'yaml'
 # Specify minimum Vagrant/Vagrant API version
 #
 Vagrant.require_version "#{$vagrant.require_version}"
-VAGRANTFILE_API_VERSION = $vagrant.api_version
 
 # Instantiate the vagrant cli node class
 node = VenvCLI::Node.new
@@ -19,6 +18,8 @@ node = VenvCLI::Node.new
 context = VenvEnvironment::Context.new
 # Get environment context (if applicable)
 environment_context = context.get
+# Read any environment-specific options
+context.join(environment_context)
 # Generate the node set
 node_set = context.activate(environment_context)
 # Instantiate the vagrant cli group class
@@ -43,7 +44,7 @@ groups = VenvEnvironment::Groups.new
 # Instantiate the vagrant machine settings class
 settings = VenvMachine::Settings.new
 # Process Virtual Machines
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+Vagrant.configure($vagrant.api_version) do |config|
   node_set.each do |node_object|
       # Configure ssh settings
       settings.eval_ssh(node_object, config)
