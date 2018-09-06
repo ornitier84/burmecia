@@ -19,8 +19,11 @@ class Context
     # Load environment-specific config, initialize variables in global scope
     environment_config_file = "#{environment_path}/config.yaml"
     if File.exist?(environment_config_file)
-      @env_config.join(environment_config_file, 'settings')
-      environment = File.read($environment.context_file)
+      begin
+        @env_config.join(environment_config_file, 'settings')
+      rescue Exception => e
+        puts "Not reading environment-specific config #{environment_config_file} due to error in parsing"
+      end
     end
 
   end
