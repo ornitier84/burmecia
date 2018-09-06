@@ -1,0 +1,35 @@
+
+- name: 'ansible-controller'
+  box: 'ubuntu/xenial64'
+  desktop: false
+  interfaces:
+    - ip: 192.168.122.11
+      auto_config: true
+      method: 'private_network'
+  vmem: 1024
+  provision: true
+  vcpu: 1
+  synced_folders:
+    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents: '/home/vagrant/Documents'
+    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\git: '/home/vagrant/git'
+  provisioners:
+    - ansible:
+        inventory: "/vagrant/environments/contoso/inventory.yaml"
+        gather_facts: true
+        become: True
+        tasks:
+          - name: pre-reqs | Installing Python Pre-Reqs
+            pip:
+              name: "{{ item }}"
+              state: "present"
+            become: true
+            with_items:
+              - 'ansible-vault'
+              - 'httplib2'
+              - 'Jinja2'
+              - 'mock'
+              - 'nose'
+              - 'paramiko'
+              - 'PyYAML'
+              - 'six'
+              - 'voluptuous'

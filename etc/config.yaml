@@ -5,7 +5,7 @@ settings:
       basedir: provisioners/ansible
       cfg: ansible.cfg
     mode: controller #standalone
-    surrogate: devel-ansible01
+    surrogate: ansible-controller
     vardir: ".vagrant/machines/%s/provisioners/ansible"
     default_include_statement: 'import_playbook'
     windows_helper_script: scripts/windows.ansible-playbook.sh
