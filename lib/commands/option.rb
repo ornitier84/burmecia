@@ -1,11 +1,11 @@
 # Sets environment context for writing inventory yaml file relevant to specified environment
 options = {}
 opt_parser = OptionParser.new do |opt|
-  opt.banner = "Usage: vagrant semaphore SEMAPHORE_NAME ACTION"
+  opt.banner = "Usage: vagrant options OptionName ACTION"
   opt.separator  ""
   opt.separator  "Actions"
-  opt.separator  "     on: creates a .file under the .vagrant directory with the name of the specified semaphore"
-  opt.separator  "     off: deletes the semaphore file"
+  opt.separator  "     on: creates a .{{OptionName}} file under the .vagrant directory with the name of the specified option"
+  opt.separator  "     off: deletes the .{{OptionName}} file"
   opt.separator  ""
   opt.on("-h","--help","help") do
     puts opt_parser

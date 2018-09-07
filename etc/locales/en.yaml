@@ -173,3 +173,8 @@ strings:
       You may experience unexpected results!
       Error was: %s
       For the full backtrace, set the debug option in config.yaml to 'true'
+    unhandled: |-
+      I encountered an unhandled exception
+      Error was %s
+      Try enabling debugging via
+      vagrant option debug on

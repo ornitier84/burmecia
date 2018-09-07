@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 # Bail out if we don't need to load the Vagrantfile
-exit if [ "environment","inventory","edit", "group", "node", "rake", "semaphore" ].include?(ARGV[0])
+exit if [ "environment","inventory","edit", "group", "node", "rake", "option" ].include?(ARGV[0])
 
 # Load custom modules
 require_relative 'lib/cli'
@@ -113,5 +113,10 @@ if $debug
     main  
   end
 else
-  main
+  begin
+    main
+  rescue Exception => e
+    $logger.error($errors.unhandled % e.to_s.bold)
+    exit
+  end
 end
