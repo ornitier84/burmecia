@@ -22,10 +22,9 @@ class Context
       begin
         @env_config.join(environment_config_file, 'settings')
       rescue Exception => e
-        puts "Not reading environment-specific config #{environment_config_file} due to error in parsing"
+        $logger.error($errors.environment.config % environment_config_file)
       end
     end
-
   end
 
   def get()
@@ -36,7 +35,6 @@ class Context
       environment_path = environment == 'all' ?
       $environment.basedir : "#{$environment.basedir}/#{environment}"      
       if !File.exist?(environment_path)
-        puts 'fuckkkk'
         $logger.error($errors.environment.path.notfound % environment_path)
         exit
       else      

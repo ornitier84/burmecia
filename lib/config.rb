@@ -59,17 +59,15 @@ if not @required_plugins.empty?
 end
 
 # Load vagrant plugins
-#
-# $project.requirements.plugins.mandatory.each do |plugin|
-# 	puts "Attempting to load #{plugin}"
-# 	begin
-# 		require "#{plugin}" 
-# 	rescue Exception => err
-# 	  if @debug
-# 	    STDERR.puts "Exception: #{err.message}"
-# 	    STDERR.puts "Backtrace:\n#{@pretty_print.backtrace(err)}\n"  
-# 	  else
-# 	    $logger.error($errors.loaderror % err)
-# 	  end
-# 	end
-# end
+$project.requirements.plugins.mandatory.each do |plugin|
+	
+	begin
+		require "#{plugin}" 
+	rescue Exception => err
+	  if @debug
+	    STDERR.puts "Exception: #{err.message}"
+	    STDERR.puts "Backtrace:\n#{@pretty_print.backtrace(err)}\n"  
+	  end
+	end
+
+end

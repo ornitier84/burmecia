@@ -5,6 +5,13 @@
 require_relative 'lib/cli'
 require_relative 'lib/environment'
 require_relative 'lib/config'
+if $debug
+  begin
+    require 'pry'
+  rescue exception => e
+    $logger.error($errors.debug.nopry)
+  end
+end
 # Load built-in libraries
 require 'yaml'
 #

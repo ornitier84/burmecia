@@ -90,6 +90,12 @@ strings:
         synopsis: |-
           The first line in ad-hoc command file must begin with an octothorp (#) and contain the command synopsis!
           Skipping %s
+    debug:
+      nopry: |-
+        I couldn't import the 'pry' module for debugging
+        If it's not installed, try installing with:
+          vagrant plugin install rb-readline
+          vagrant plugin install pry-byebug
     fso:
       operations:
         failure: |-
@@ -106,6 +112,8 @@ strings:
         notfound: |-
           The environment you specified has no environment directory: %s
     environment:
+      config: |-
+        There was an error in parsing the specified environment config %s, skipping
       path:
         notfound: |-
           The environment path you specified (%s) was not found.
