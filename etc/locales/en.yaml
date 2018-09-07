@@ -93,9 +93,10 @@ strings:
     debug:
       nopry: |-
         I couldn't import the 'pry' module for debugging
-        If it's not installed, try installing with:
+        If it's not installed, try installing the debugger plugins with:
           vagrant plugin install rb-readline
           vagrant plugin install pry-byebug
+          vagrant plugin install pry-stack_explorer
     fso:
       operations:
         failure: |-
@@ -113,7 +114,8 @@ strings:
           The environment you specified has no environment directory: %s
     environment:
       config: |-
-        There was an error in parsing the specified environment config %s, skipping
+        There was an error in parsing the specified environment config %s
+        Error was %s
       path:
         notfound: |-
           The environment path you specified (%s) was not found.

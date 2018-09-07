@@ -22,7 +22,7 @@ class Context
       begin
         @env_config.join(environment_config_file, 'settings')
       rescue Exception => e
-        $logger.error($errors.environment.config % environment_config_file)
+        $logger.error($errors.environment.config % [environment_config_file, e])
       end
     end
   end
