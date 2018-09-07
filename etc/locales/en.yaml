@@ -92,9 +92,10 @@ strings:
           Skipping %s
     debug:
       nopry: |-
-        I couldn't import the 'pry' module for debugging
-        If it's not installed, try installing the debugger plugins with:
+        I couldn't import the 'pry' modules for debugging
+        If these are not installed, try installing with:
           vagrant plugin install rb-readline
+          vagrant plugin install pry-rescue
           vagrant plugin install pry-byebug
           vagrant plugin install pry-stack_explorer
     fso:
