@@ -12,8 +12,11 @@ settings:
     scratch:
       playbook_name: playbook.scratch.yaml
     options:
-      install_mode: pip
-      config_file: ansible.cfg
+      global:
+        config_file: ansible.cfg
+        become: true
+      local:
+        install_mode: pip
   environment:
     context_file: .vagrant/.environment_context
     context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
