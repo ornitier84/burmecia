@@ -69,7 +69,7 @@ module VenvProvisioners
 		            	else
 							machine.vm.provision "ansible_local" do |ansible|
 							  ansible.playbook = @playbook
-							  ansible.groups = @group_set
+							  ansible.groups = @group_set if @group_set
 							  @ansible_settings.eval_ansible(node_object, ansible, local: true)
 							end		            	
 		            	end
@@ -83,7 +83,7 @@ module VenvProvisioners
 					    # ansible.raw_ssh_args = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o IdentitiesOnly=yes'
 		                ansible.inventory_path = @inventory if @inventory
 		                ansible.playbook = @playbook                
-		                ansible.groups = @group_set
+		                ansible.groups = @group_set if @group_set
 						@ansible_settings.eval_ansible(node_object, ansible)		                
 		              end
 		              # ^^^^^^^^^^
