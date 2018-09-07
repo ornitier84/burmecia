@@ -1,11 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Bail out if we don't need to load the Vagrantfile
+exit if [ "environment","inventory","edit", "group", "node", "rake", "semaphore" ].include?(ARGV[0])
+
 # Load custom modules
 require_relative 'lib/cli'
 require_relative 'lib/environment'
 require_relative 'lib/config'
-if $logging.debug
+if $debug
   begin
     require 'pry'
     require 'pry-rescue'
@@ -15,7 +18,6 @@ if $logging.debug
 end
 # Load built-in libraries
 require 'yaml'
-
 
 def main
   #
@@ -106,7 +108,7 @@ def main
   }
 end
 
-if $logging.debug
+if $debug
   Pry.rescue do
     main  
   end

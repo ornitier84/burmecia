@@ -60,6 +60,8 @@ settings:
   logging:
     debug: false
     logs_dir: ".vagrant/var/log"
+  semaphores:
+    debug: ".vagrant/.debug"
   managed_nodes:
     required_keys:
       - ssh

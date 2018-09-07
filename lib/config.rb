@@ -18,7 +18,12 @@ config.parse(vagrant_locale_file, 'strings')
 # Load config, initialize variables in global scope
 config.parse(vagrant_config_file, 'settings')
 # Logging
-@debug = [(ARGV.include?('--debug')), ENV['DEBUG'], ENV['debug'], $logging.debug].any?
+$debug = [
+	(ARGV.include?('--debug')), 
+	ENV['DEBUG'], ENV['debug'], 
+	$logging.debug, 
+	File.exist?($semaphores.debug)
+].any?
 $logger = Vagrant::UI::Colored.new
 # Initialize global variables
 $is_virtualbox = !$virtbox.nil? || [defined? VagrantPlugins::ProviderVirtualBox, $vagrant.provider_order.first == 'virtualbox'].all? ? true : false

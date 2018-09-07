@@ -3,9 +3,6 @@ module VenvEnvironment
 class Context
 
   def initialize
-    if ARGV[0] == 'environment'
-      exit
-    end
     require_relative 'misc'
     @env_config = YAMLTasks.new
   end
