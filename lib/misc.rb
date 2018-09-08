@@ -59,6 +59,8 @@ class YAMLTasks
 		yaml_config[toplevelkey].each do |c,s|
 			if yaml_config[toplevelkey][c].is_a?(Hash)
 				yaml_config[toplevelkey][c].each_pair do |item, value|
+					# TODO
+					# Support Deep Hash Merge
 					if value.is_a?(Hash)
 						eval "$#{c}.#{item} = #{value}.to_o"
 					else
