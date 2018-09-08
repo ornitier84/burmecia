@@ -1,7 +1,7 @@
 # Sets environment context for writing inventory yaml file relevant to specified environment
 options = {}
 opt_parser = OptionParser.new do |opt|
-  opt.banner = "Usage: vagrant options OptionName ACTION"
+  opt.banner = "Usage: vagrant option OptionName ACTION"
   opt.separator  ""
   opt.separator  "Actions"
   opt.separator  "     on: creates a .{{OptionName}} file under the .vagrant directory with the name of the specified option"
@@ -20,7 +20,9 @@ if ARGV.length == 3
     # Create semaphore file if it does not exist
     if !File.exist?(semaphore_file)
       puts "Creating #{semaphore_file}"
-      FileUtils.touch semaphore_file 
+      FileUtils.touch semaphore_file
+    else
+      puts "option already on: found semaphore #{semaphore_file}"
     end
   
   when "off"
@@ -29,6 +31,8 @@ if ARGV.length == 3
     if File.exist?(semaphore_file)
       puts "Removing #{semaphore_file}"
       FileUtils.rm_f semaphore_file 
+    else
+      puts "option already off: semaphore #{semaphore_file} is not present"
     end    
 
   else
