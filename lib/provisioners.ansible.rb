@@ -15,7 +15,24 @@ module VenvProvisionersAnsible
 
       # ansible_local options
       if local
-        $ansible.options.local.each_pair do |item, value|
+        if $ansible.options.local.respond_to?(:each_pair)
+          $ansible.options.local.each_pair do |item, value|
+            if !value.nil?
+              if node_object.key?("ansible") and !node_object['ansible'].nil?
+                if !node_object["ansible"].key?(item.to_s)
+                  ansible.send("#{item}=", value)
+                end
+              else
+                ansible.send("#{item}=", value)
+              end
+            end
+          end
+        end
+        end
+
+      # ansible global options
+      if $ansible.options.global.respond_to?(:each_pair)
+        $ansible.options.global.each_pair do |item, value|
           if !value.nil?
             if node_object.key?("ansible") and !node_object['ansible'].nil?
               if !node_object["ansible"].key?(item.to_s)
@@ -24,19 +41,6 @@ module VenvProvisionersAnsible
             else
               ansible.send("#{item}=", value)
             end
-          end
-        end
-      end
-
-      # ansible global options
-      $ansible.options.global.each_pair do |item, value|
-        if !value.nil?
-          if node_object.key?("ansible") and !node_object['ansible'].nil?
-            if !node_object["ansible"].key?(item.to_s)
-              ansible.send("#{item}=", value)
-            end
-          else
-            ansible.send("#{item}=", value)
           end
         end
       end
