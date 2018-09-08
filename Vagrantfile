@@ -10,6 +10,7 @@ require_relative 'lib/environment'
 require_relative 'lib/config'
 if $debug
   begin
+    $logger.warn('Debugging enabled')
     require 'pry'
     require 'pry-rescue'
   rescue exception => e
