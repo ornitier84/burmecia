@@ -10,7 +10,7 @@ module VenvProvision
 		  @invoke = VenvProvisioners::Provisioner.new			
 		end
 
-	    def run(node_object, machine=nil)
+	    def run(node_object, node_set=nil, machine=nil)
 	      if node_object.key?("provisioners")
 	        node_object["provisioners"].each do |provisioner|
 	          if not provisioner.is_a?(Hash)
@@ -23,7 +23,7 @@ module VenvProvision
 	          when [provisioner.key?('shell'),!provisioner['shell'].nil?].all?
 	            @invoke.shell(node_object, machine)              
 	          when [provisioner.key?('ansible'),!provisioner['ansible'].nil?].all?
-	            @invoke.ansible(node_object, machine)
+	            @invoke.ansible(node_object, node_set, machine)
 	          when [provisioner.key?('puppet'),!provisioner['puppet'].nil?].all?
 	            @invoke.puppet(node_object, machine)
 	          else

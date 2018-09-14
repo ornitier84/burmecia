@@ -1,0 +1,9 @@
+default_user_shell: /bin/bash
+
+sshusers:
+  - svcansible
+sshgroups:
+  - admin
+  - wheel 
+
+vagrant_basedir: "{{ vagrant_basedir if vagrant_basedir is defined else '.' }}"

@@ -56,6 +56,7 @@ module VenvCLI
       if [!$platform.is_windows, $debug].all?
         $logger.warn($warnings.libvirt_windows_os)
       end
+      ansible_surrogate = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
       if $managed
         #
         # TODO
@@ -67,14 +68,13 @@ module VenvCLI
           return false
         end
         if $platform.is_windows
-          ansible_surrogate = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
           if ansible_surrogate.key?('managed') and !ansible_surrogate['managed'].nil?
             ansible_surrogate_status = get_managed_state(ansible_surrogate)
           else
-            ansible_surrogate_status = @snode.status_singleton(ansible_surrogate)
+            ansible_surrogate_status = @node.status_singleton(ansible_surrogate)
           end
           if ansible_surrogate_status.to_s != 'reachable'
-            $logger.error($errors.managed.surrogate.not_reachable % $ansible.surrogate)
+            $logger.error($errors.provisioners.ansible.surrogate.not_reachable % {machine:$ansible.surrogate})
             return false
           end
         end          
@@ -94,23 +94,20 @@ module VenvCLI
       no_provision = [$no_provision, node_object['provision'] == 'false', (ARGV.include? "--no-provision"), node_object['name'] == target_machine].any?
       unless no_provision
         if $managed
-          provision(node_object)
+          provision(node_object, node_set)
         else
-          provision(node_object, machine)
+          provision(node_object, node_set, machine)
         end
       end
       # Start any linked machines
       @linked_machines.up(node_object)        
     end
 
-    def provision(node_object, machine=nil)
-      # TODO Move these hardcoded values to config.yaml
-      machine_dir = "#{Dir.pwd}/#{$vagrant.local_data_dir}/machines/#{node_object['name']}/#{$provider_name}"
-      is_provisioned = File.exist?("#{machine_dir}/action_provision")
-      if ARGV.include? 'up' and !is_provisioned
-        @provisioners.run(node_object, machine) 
+    def provision(node_object, node_set=nil, machine=nil)
+      if ARGV.include? 'up' and !node_object['is_provisioned']
+        @provisioners.run(node_object, node_set, machine) 
       elsif  ["provision", "reload"].any? { |arg| ARGV.include? arg }
-        @provisioners.run(node_object, machine)
+        @provisioners.run(node_object, node_set, machine)
       end
     end
 

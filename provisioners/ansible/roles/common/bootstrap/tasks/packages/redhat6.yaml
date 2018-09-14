@@ -1,0 +1,14 @@
+- name: packages | redhat6 | Install EPEL Repo
+  yum:
+    name: http://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+    state: present
+
+- name: packages | redhat7 | Install python requirements for ansible
+  yum: 
+    name: "{{ python_package }}"
+    state: present
+  with_items:
+    - libselinux-python
+    - policycoreutils-python
+  loop_control:
+    loop_var: python_package    

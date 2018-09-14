@@ -1,0 +1,33 @@
+- name: packages | redhat7 | Add epel repository
+  yum: name={{item}} state=present
+  with_items:
+    - epel-release
+  tags: [base_config,packages]
+
+- name: packages | redhat7 | install relevant python packages 
+  yum: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-devel
+    - '@C Development Tools and Libraries'
+  loop_control:
+    loop_var: python_package    
+  ignore_errors: true  
+
+- name: packages | redhat7 | install security utilities
+  yum: 
+    name: "{{ security_package }}"
+    state: present
+  with_items:
+    - fail2ban
+  loop_control:
+    loop_var: security_package    
+  ignore_errors: true  
+
+- pip:
+    name: "{{ item }}"
+  with_items:
+    - libselinux-python
+    - policycoreutils-python
+  

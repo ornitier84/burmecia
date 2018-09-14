@@ -160,21 +160,22 @@ module VenvProvisionersAnsible
       playbook_hash = { 'hosts' => host['name'] }
       # YAML representation:
       # vars:
-      #   VAGRANT_SYNCED_DIR: some/path  
+      #   vagrant_basedir: some/path  
       # construct the ansible vars hash
       if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?
         case ansible_hash['vars']
         when Hash
           default_vars_hash = {
-            'VAGRANT_SYNCED_DIR' => sync_dir,
+            'vagrant_basedir' => sync_dir,
             'environment_basedir' => $environment.basedir,
-            'environment_context' => $environment.context
+            'environment_context' => $environment.context,
+            'keys_dir' => "#{$environment.basedir}/ssh"
           }
           vars_hash = {'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
         when Array
           default_vars_hash = { 'vars' =>
             [
-              {'VAGRANT_SYNCED_DIR' => sync_dir,
+              {'vagrant_basedir' => sync_dir,
               'environment_basedir' => $environment.basedir,
               'environment_context' => $environment.context
               }

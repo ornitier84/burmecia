@@ -1,6 +1,8 @@
 ---
 settings:
   ansible:
+    env:
+      ansible_keep_remote_files: 0
     paths:
       basedir: provisioners/ansible
       cfg: ansible.cfg
@@ -13,7 +15,15 @@ settings:
       playbook_name: playbook.scratch.yaml
     options:
       global:
-        config_file: ansible.cfg
+        config_file: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg
+        # extra_vars:
+          # clear_module_cache: true
+          # ansible_ssh_user: 'vagrant'
+        # raw_ssh_args:
+        #   - '-o UserKnownHostsFile=/dev/null'
+        #   - '-o StrictHostKeyChecking=no'
+        #   - '-o PasswordAuthentication=no'
+        #   - '-o IdentitiesOnly=yes'
         become: true
       local:
         install_mode: pip
@@ -98,9 +108,9 @@ settings:
           - vagrant-vbguest
   puppet:
     basedir: provisioners/puppet
-  starttime: "<%= Time.now %>"
+  starttime: <%= Time.now %>
   testing:
-    ternary: "<%= defined?(%{somevar}) ? :'ternary - true' : :'ternary - false' %>  "
+    ternary: "<%= defined?(%{somevar}) ? :'ternary - true' : :'ternary - false' %>"
   user:
     homedir: "<%= File.expand_path('~') %>"
     name: "<%= ENV['USER'] || ENV['USERNAME'] %>"
@@ -127,7 +137,8 @@ settings:
     box_download_insecure: true
     ssh:
       private_key_path:
-        - 'etc/sshkeys/vagrantkey'
+        - 'etc/sshkeys/insecure'
+        # - 'etc/sshkeys/secure'
       insert_key: false
       username: vagrant
     no_mount_vagrant: false

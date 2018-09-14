@@ -133,11 +133,20 @@ class Nodes
             y.first[k] = v
           end
         end
+        
         # Populate node environment keys
         y.first['environment_path'] = environment_path_fq
         # Populate node definition key
         y.first['node_definition_path'] = File.dirname(f)
+        # Populate machine path
+        y.first['machine_dir'] = "#{Dir.pwd}/#{$vagrant.local_data_dir}/machines/#{y.first['name']}/#{$provider_name}"
+        # Populate is_created property
+        y.first['is_created'] = File.exist?("#{y.first['machine_dir']}/id")
+        # Populate is_provisioned property
+        y.first['is_provisioned'] = File.exist?("#{y.first['machine_dir']}/action_provision")
+        # intermediary variable node_name
         node_name = node_definition['name']
+        # Skip duplicate machine definitions (according to machine 'name' property)
         if node_names.include? node_name
           $logger.warn($warnings.definition.skipping % [f, "Duplicate node name: #{node_name}"]) if $logger
           next

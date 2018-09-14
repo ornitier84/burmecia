@@ -29,10 +29,9 @@ module VenvNetworking
               node_set.each do |h|
                 if h.key?('interfaces') and !h['interfaces'].nil?
                   h['interfaces'].each do |interface|
-                    if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all?
-                      next unless interface['exclude_from_hosts'] == false
-                      provisioner.add_host interface['ip'], [h['name']] if interface['ip'] and interface.is_a?(Hash)
-                    end
+                    next if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all? and interface['exclude_from_hosts'] == true
+                    $logger.info($info.provisioners.hosts % [interface['ip'], h['name'],host['name']]) if $debug 
+                    provisioner.add_host interface['ip'], [h['name']] if interface['ip'] and interface.is_a?(Hash)
                   end
                 end
               end

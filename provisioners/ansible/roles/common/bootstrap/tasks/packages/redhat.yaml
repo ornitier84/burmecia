@@ -1,0 +1,55 @@
+# - name: "Clean up unwanted yum repos"
+#  file:
+#    path: "{{ item }}"
+#    state: absent
+#  with_fileglob:
+#    - "/etc/yum.repos.d/*"
+#  notify: yum-clean-metadata
+
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ ansible_distribution | lower}}{{ ansible_distribution_major_version }}.yaml"
+      - "{{ ansible_distribution }}_{{ ansible_distribution_major_version[:1] ~ 'x' }}.yml"
+      skip: true
+
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ ansible_os_family | lower}}{{ ansible_distribution_major_version }}.yaml"
+      skip: true      
+
+- name: packages | redhat | install system updates
+  yum: name=* state=latest update_cache=yes
+  ignore_errors: true
+
+- name: packages | redhat | Install source version control software
+  yum: 
+    name: "{{ git_package }}"
+    state: present
+  with_items:
+    - git
+  loop_control:
+    loop_var: git_package
+  ignore_errors: true
+
+- name: packages | redhat | install network utilities
+  yum: 
+    name: "{{ network_package }}"
+    state: present
+  with_items:
+    - nc
+    - bind-utils
+  loop_control:
+    loop_var: network_package    
+  ignore_errors: true
+
+- name: packages | redhat | install filesystem utilities
+  yum:
+    name: "{{ fsu_package }}"
+    state: present
+  with_items:
+    - mlocate
+  loop_control:
+    loop_var: fsu_package
+  ignore_errors: true

@@ -1,0 +1,30 @@
+- name: packages | common | install networking packages
+  package:
+    name: "{{ networking_package }}"              
+    state: present
+  with_items:
+    - lsof
+    - socat
+    - tcpdump
+  loop_control:
+    loop_var: networking_package      
+
+- name: packages | common | install relevant python packages 
+  package: 
+    name: "{{ python_package }}"
+    state: present
+  with_items:
+    - python-setuptools
+  loop_control:
+    loop_var: python_package    
+
+- name: packages | common | install python pip
+  easy_install:
+    name: pip
+    state: latest
+  register: pip_install
+  ignore_errors: true
+
+- name: packages | common | fallback | install pip
+  shell: /usr/bin/easy_install pip
+  when: pip_install.failed == true

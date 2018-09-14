@@ -1,10 +1,35 @@
-- name: Add Users
+- name: users | Add User
   user:
     name: "{{ item }}"
     state: present
-    groups: "{{ 'admin' if ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu' else 'wheel' }}"
+    shell: "{{ default_user_shell }}"
+    groups: "{{ 'admin' if ansible_distribution in ['Debian', 'Ubuntu'] else 'wheel' }}"
   with_items: "{{ sshusers }}"
 
-- name: Add User to sudoers
+- name: users | Add User to sudoers
   action: 'lineinfile dest=/etc/sudoers.d/{{ item }} state=present create=yes regexp="{{ item }} .*" line="{{ item }} ALL=(ALL) NOPASSWD: ALL"'
   with_items: "{{ sshusers }}"
+
+- name: users | Create home directory objects
+  file:
+    path: "/home/{{ home_template_obj.path }}"
+    state: directory
+  with_filetree:
+    - "{{ vagrant_basedir }}/{{ environment_basedir }}/{{ environment_context }}/templates/home"
+    - "{{ vagrant_basedir }}/templates/home"
+  loop_control:
+    loop_var: home_template_obj
+  when: home_template_obj.state == 'directory'
+
+- name: users | Populate home directories
+  template:
+    src: '{{ home_template_obj.src }}'
+    dest: '/home/{{ home_template_obj.path }}'
+    group: wheel
+  with_filetree: 
+    - "{{ vagrant_basedir }}/{{ environment_basedir }}/{{ environment_context }}/templates/home"
+    - "{{ vagrant_basedir }}/templates/home"
+  loop_control:
+    loop_var: home_template_obj  
+  when: >
+    home_template_obj.state == 'file'  

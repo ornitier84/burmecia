@@ -131,7 +131,7 @@ run_playbook() {
   ${PREFIX} ${playbook_cmd} "${playbook}" \
     --inventory-file="${inventory}" \
     "${LIMIT_HOSTNAME}" \
-    --extra-vars "is_windows=true, provisioners_root_dir=${PROVISIONERS_ROOT_DIR}" \
+    --extra-vars "is_windows=true,provisioners_root_dir=${PROVISIONERS_ROOT_DIR},host_key_checking=False" \
     --connection=${CONNECTION} \
     "$@"
 }

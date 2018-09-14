@@ -44,6 +44,31 @@ module VenvCommon
       @@vagrant_cmd = Vagrant::Util::Which.which("vagrant")
 	end
 
+	def run_cmd(cmd)
+    	#
+    	# Launch subprocess
+    	#
+		Open3.popen3(cmd) do |stdin, stdout, stderr|
+			stdin.close
+			readers = [stdout, stderr]
+			while readers.any?
+				# Implement IO.select as per
+				# https://ruby-doc.org/stdlib-2.1.2/libdoc/open3/rdoc/Open3.html#method-c-popen3
+				ready = IO.select(readers, [], readers)
+				ready[0].each do |fd|
+					if fd.eof?
+						fd.close
+						readers.delete fd
+					else
+						line = fd.readline
+						puts('' + line.gsub(/\n/,""))
+					end
+				end
+			end
+		end
+		# ^^^^^^^^^^
+	end
+
     def status_singleton(node_object, no_provision: false)
 		r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "status", "#{node_object['name']}")
 		stdout = r.stdout.strip!
@@ -55,14 +80,20 @@ module VenvCommon
     end
 
     def up_singleton(node_object, no_provision: false)
-      $logger.info($info.boot.up % node_object['name'])
-      if no_provision
-      	r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "up", "#{node_object['name']}", "--no-provision")
-      else
-      	r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "up", "#{node_object['name']}")
-      end
-      puts r.stdout.strip!
-      puts r.stderr.strip!
+		$logger.info($info.boot.up % node_object['name'])
+		if no_provision
+			cmd = "#{CLI.vagrant_cmd} up #{node_object['name']} --no-provision"
+		else
+			cmd = "#{CLI.vagrant_cmd} up #{node_object['name']}"
+		end
+		if @debug
+			$logger.info($info.singleton.ssh.command % cmd)
+		end		
+		begin
+			run_cmd(cmd)
+		rescue Exception => e
+			$logger.error($errors.singleton.ssh.failed % e)
+		end       
     end
 
     def ssh_singleton(node_object, args='')
@@ -80,32 +111,35 @@ module VenvCommon
 	      	"-p #{node_object['ssh']['port']}",
 	      	ssh_options,
 	      	"'
-	      	'"
+	      	'" # simulate carriage return # TODO use something more elegant
 	        ].join(' ')
+      	    cmd = "#{$project.ssh.path} #{ssh_args} '#{args}'"
       	    if @debug
-  	    		$logger.info($info.singleton.ssh.command % "#{$project.ssh.path} #{ssh_args} '#{args}'")
-      	    end			
-			stdin, stdout, stderr, wait_thr = Open3.popen3(
-				"#{$project.ssh.path} #{ssh_args} '#{args}'"
-				)
-	        _output = stdout.readlines.collect(&:strip) || 'N/A'
-	        output = _output.empty? ? 'N/A' : _output
-	        errors = stderr.readlines.collect(&:strip)
-	        if wait_thr.value == 0
-	  	      $logger.info($info.singleton.ssh.ok % output)
-	        else
-	  	      $logger.error($errors.singleton.ssh.failed % errors)
-	  	    end
+  	    		$logger.info($info.singleton.ssh.command % cmd)
+      	    end		
+	      	begin
+	      		run_cmd(cmd)
+			rescue Exception => e
+				$logger.error($errors.singleton.ssh.failed % e)
+			end 	    	
 	    else
-	        r = Vagrant::Util::Subprocess.execute(
+	    	# >>>>>>>>>>
+	    	cmd = [
 	      	CLI.vagrant_cmd, 
 	      	"ssh", 
 	      	"#{node_object['name']}",
 	      	"-c",
-	      	args
-	      	)
-	        puts r.stdout.strip!
-	        puts r.stderr.strip!    	
+	      	"'#{args}'"
+	      	].join(' ')
+      	    if $debug
+  	    		$logger.info($info.singleton.ssh.command % cmd)
+      	    end
+	      	begin
+	      		run_cmd(cmd)
+			rescue Exception => e
+				$logger.error($errors.singleton.ssh.failed % e)
+			end
+			# <<<<<<<<<<
 	    end
     end
     

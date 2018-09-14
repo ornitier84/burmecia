@@ -3,11 +3,11 @@
 
 # Bail out if we don't need to load the Vagrantfile
 exit if [ "environment","inventory","edit", "group", "node", "rake", "option" ].include?(ARGV[0])
-
 # Load custom modules
 require_relative 'lib/cli'
 require_relative 'lib/environment'
 require_relative 'lib/config'
+require_relative 'lib/settings'
 if $debug
   begin
     $logger.warn('Debugging enabled')
@@ -18,6 +18,7 @@ if $debug
   end
 end
 # Load built-in libraries
+require 'date'
 require 'yaml'
 
 def main
@@ -55,12 +56,12 @@ def main
   # Generate the group set
   @group_set = groups.generate(node_set)
   # Instantiate the vagrant machine settings class
-  settings = VenvMachine::Settings.new
+  ssh_settings = VenvSettings::SSH.new
   # Process Virtual Machines
   Vagrant.configure($vagrant.api_version) do |config|
     node_set.each do |node_object|
         # Configure ssh settings
-        settings.eval_ssh(node_object, config)
+        ssh_settings.evaluate(node_object, config)
         # Read node autostart option
         autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : false
         # Define node
@@ -105,11 +106,16 @@ def main
       end
       if node_set.empty? and !(["environment", "inventory"].any? { |arg| ARGV.include? arg })
         $logger.warn($warnings.context.nodes.empty)
-      end    
+      end   
+        if [ "destroy", "halt", "port", "provision", "reload", "status", "up" ].include?(ARGV[0])
+          ending = Time.now
+          t = ending - DateTime.parse($starttime).to_time
+          $logger.info($info.time.elapsed % t)  
+        end
   }
 end
 
-if $debug
+if $debug and $pry_debugger_available
   Pry.rescue do
     main  
   end

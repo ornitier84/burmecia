@@ -43,6 +43,8 @@ strings:
     no_provisioners: |-
       No provisioners specified in node yaml for host %s
     provisioners:
+      hosts: |-
+        Adding %s %s to /etc/hosts on machine %s
       local:
         inline: |-
           Running local command: %s
@@ -50,12 +52,18 @@ strings:
           Running local script %s with args %s
         ok: |-
           Local command execution was successful, output was: %s
+      ansible:
+        controller: |-
+          Ansible provisioner is in 'controller' mode. Running %s ansible actions from %s 
     singleton:
       ssh:
         command: |-
           Running ssh process as follows: %s
         ok: |-
           Remote ssh command execution was successful, output was: %s
+    time:
+      elapsed: |-
+        vagrant command took %s seconds to complete
   warnings:
     context:
       nodes:
@@ -134,12 +142,6 @@ strings:
         Consult the 'Usage' section in the README or review the node definition template 
         Under the 'examples' directory
     managed:
-      surrogate:
-        not_reachable: |-
-          Windows platform detected. 
-          As such, the project configuration designates a surrogate through which ansible is to be invoked.
-          However, this host is not available, not reachable, and/or not accepting requests for interaction: %s
-          Perhaps the node is not powered on?
       not_reachable: |-
         The specified managed node is not reachable and/or not accepting requests for management: %s
         Perhaps the node is not powered on?
@@ -157,6 +159,13 @@ strings:
       local:
         failed: |-
           Local command execution failed with error: %s
+      ansible:
+        surrogate:
+          not_reachable: |-
+            Windows platform detected. 
+            As such, the project configuration designates a surrogate through which ansible is to be invoked.
+            However, this host is not available, not reachable, and/or not accepting requests for interaction: %{machine}
+            If the machine is not powered on or created, try running `vagrant up %{machine}`
     res: |-
       Could not reliably determine the hardware spec: %s
     singleton:

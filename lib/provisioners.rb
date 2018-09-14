@@ -9,7 +9,7 @@ module VenvProvisioners
 			@ansible_settings = VenvProvisionersAnsible::Settings.new
 		end
 
-		def ansible(node_object, machine=nil)
+		def ansible(node_object, node_set=nil, machine=nil)
 		      # Imports
 			  # Instantiate the vagrant provisioner class 
 			  playbook = VenvProvisionersAnsible::Playbook.new
@@ -40,37 +40,58 @@ module VenvProvisioners
 		            if $platform.is_windows
 		            	# Invoke the ansible playbook commands
 		            	if [$managed, $ansible.mode == 'controller'].any? and ARGV[-1] != $ansible.surrogate
+						    # TODO
+						    # Dedupe derivation of ansible_surrogate_object, as it already occurs in cli.rb
+						    ansible_surrogate_object = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
+							if !ansible_surrogate_object['is_created']
+								$logger.error($errors.provisioners.ansible.surrogate.not_reachable % {machine:$ansible.surrogate})
+								exit
+							end
+						    $logger.info($info.provisioners.ansible.controller % [node_object['name'], $ansible.surrogate, ])
 			            	# Derive node groups
 						  	groups = node_object.key?('groups') ? 
-			              	node_object['groups'].map { |g| "#{g}" }.join(":") : false		              	
-							playbook_args = groups ? 
-							["--playbook", 
-							"#{@playbook}",
-							"--groups",
-							"#{groups}",
-							"--inventory",
-							"#{@inventory}",
-							"--provisioners_root_dir", 
-							"#{$vagrant.basedir.windows}"] : 
-							["--playbook", 
-							"#{@playbook}",
-							"--inventory",
-							"#{@inventory}", 
-							"--provisioners_root_dir", 
-							"#{$vagrant.basedir.windows}"]
-			            	  playbook_args.push("--connection ssh")
-			              	  ssh_cmd = "#{$vagrant.basedir.windows}/#{$ansible.windows_helper_script} #{playbook_args.join(' ')}"
-			              	  # Remove 'provision' from ARGV for the second call to vagrant
-			              	  ARGV.delete("provision") if ARGV[-1] != $ansible.surrogate
-			              	  @node.ssh_singleton(
-			              	  	{'name' => $ansible.surrogate},
-			              	  	ssh_cmd
-			              	  	)
+			              	node_object['groups'].map { |g| "#{g}" }.join(":") : false          	
+						    # Build ssh commands
+						    prefix = $dry ? "echo" : " "
+						    limit_hostname="-l all"
+						    connection = "ssh"
+						    args = [ "export ANSIBLE_KEEP_REMOTE_FILES=#{$ansible.env.ansible_keep_remote_files};",
+						    "export ANSIBLE_CONFIG=#{$ansible.options.global.config_file};",
+						    "#{prefix} $(which ansible-playbook) #{@playbook}",
+						    "--inventory-file=#{@inventory}",
+						    "#{limit_hostname}",
+						    "--extra-vars is_windows=true,provisioners_root_dir=#{$vagrant.basedir.windows},host_key_checking=False",
+					        "--connection=#{connection} $(test #{$ansible.options.local.vault_password_file} && echo --vault-password-file=#{$ansible.options.local.vault_password_file})" ]
+		              	    ssh_cmd = args.join(' ')
+		              	    # Remove unnecessary args from ARGV for the subshell call to vagrant
+		              	    if ARGV[-1] != $ansible.surrogate
+		              	    	ARGV.delete("#{ARGV[-1]}")
+		              	    	ARGV.delete("provision") 
+		              	    end
+		              	    if $pry_debugger_available and $debug
+			              	    Pry.rescue do
+			              	    @node.ssh_singleton(
+			              	    	{'name' => $ansible.surrogate},
+			              	    	ssh_cmd
+			              	    	)
+			              		end
+		              		else
+			              	    @node.ssh_singleton(
+			              	    	{'name' => $ansible.surrogate},
+			              	    	ssh_cmd
+			              	    	)		              			
+		              		end
 		            	else
 							machine.vm.provision "ansible_local" do |ansible|
 							  ansible.playbook = @playbook
 							  ansible.groups = @group_set if @group_set
-							  @ansible_settings.eval_ansible(node_object, ansible, local: true)
+							  if $pry_debugger_available and $debug
+								  Pry.rescue do
+								  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
+								  end
+								else
+									@ansible_settings.eval_ansible(node_object, ansible, local: true)
+							  end
 							end		            	
 		            	end
 		            # ^^^^^^^^^^
@@ -78,13 +99,16 @@ module VenvProvisioners
 		              # If the virtual host is running a Posix-Compliant OS, we run ansible locally on the VM host
 		              # ----------
 		              machine.vm.provision 'ansible' do |ansible|
-		                # ansible.config_file = $ansible.paths.cfg
-						# ansible.extra_vars = { clear_module_cache: true, ansible_ssh_user: 'vagrant' }
-					    # ansible.raw_ssh_args = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o IdentitiesOnly=yes'
 		                ansible.inventory_path = @inventory if @inventory
 		                ansible.playbook = @playbook                
 		                ansible.groups = @group_set if @group_set
-						@ansible_settings.eval_ansible(node_object, ansible)		                
+					    if $pry_debugger_available and $debug		                
+			                Pry.rescue do
+								@ansible_settings.eval_ansible(node_object, ansible)
+							end
+						else
+							@ansible_settings.eval_ansible(node_object, ansible)
+					    end
 		              end
 		              # ^^^^^^^^^^
 		          end

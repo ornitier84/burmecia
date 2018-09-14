@@ -1,29 +1,19 @@
 ---
 # common tasks file
 
-- include_tasks: groups.yaml tags=groups
+- include_tasks: groups.yaml
 
-- include_tasks: users.yaml tags=users
+- include_tasks: users.yaml
+  when: sshusers is defined
 
-#- include_tasks: fail2ban.yaml tags=ssh,ssh:hardening
+- include_tasks: "packages/common.yaml"
 
-
-- include_tasks: "{{ item }}"
-  with_first_found:
-    - files:
-      - "packages.{{ ansible_os_family | lower}}.yaml"
-      skip: true
-  tags:
-    - software
-    - packages
+- include_tasks: "packages/{{ ansible_os_family | lower}}.yaml"
 
 - include_tasks: "{{ item }}"
   with_first_found:
     - files:
       - "fail2ban.{{ ansible_os_family | lower}}.yml"
       skip: true
-  tags:
-    - ssh
-    - ssh:hardening 
 
-- include_tasks: ssh-config.yaml tags=ssh
+- include_tasks: ssh-config.yaml

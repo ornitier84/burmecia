@@ -20,7 +20,7 @@ class YAMLTasks
 	# check for vagrant config file
 	if File.exist?(yamlfile)
 			begin
-				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result)
+				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result(binding))
 			rescue Exception => e
 				warn("#{yaml_config} fails yaml syntax check!")
 				raise("Error was #{e}")
@@ -46,7 +46,7 @@ class YAMLTasks
 	# check for vagrant config file
 	if File.exist?(yamlfile)
 			begin
-				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result)
+				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result(binding))
 			rescue Exception => e
 				warn("#{yaml_config} fails yaml syntax check!")
 				raise("Error was #{e}")

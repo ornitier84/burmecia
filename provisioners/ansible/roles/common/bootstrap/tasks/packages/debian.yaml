@@ -1,0 +1,26 @@
+- name: packages | debian | updating apt-cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  become: true
+  
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ ansible_distribution | lower}}{{ ansible_distribution_major_version }}.yaml"
+      - "{{ ansible_distribution }}_{{ ansible_distribution_major_version[:1] ~ 'x' }}.yml"
+      skip: true
+
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ ansible_os_family | lower}}{{ ansible_distribution_major_version }}.yaml"
+      skip: true      
+
+- name: packages | debian | Install git and related
+  apt: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git
+  ignore_errors: true
