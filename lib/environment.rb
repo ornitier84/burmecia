@@ -29,16 +29,18 @@ class Context
     # Determine environment context (if applicable)
     if File.exist?($environment.context_file)
       environment = File.read($environment.context_file).chomp()
-      environment_path = environment == 'all' ?
-      $environment.basedir : "#{$environment.basedir}/#{environment}"      
-      if !File.exist?(environment_path)
-        $logger.error($errors.environment.path.notfound % environment_path)
-        abort
-      else      
-        return environment
-      end
     else
-      return "all"
+      $logger.warn($warnings.context.environment.no_active % $environment.defaults.context)
+      environment = $environment.defaults.context
+    end        
+    # Define environment path
+    environment_path = "#{$environment.basedir}/#{environment}"      
+    # Safeguard
+    if !File.exist?(environment_path)
+      $logger.error($errors.environment.path.notfound % environment_path)
+      abort
+    else      
+      return environment
     end
 
   end

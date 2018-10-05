@@ -30,6 +30,8 @@ settings:
       local:
         install_mode: pip
   environment:
+    defaults: 
+      context: contoso
     context_file: .vagrant/.environment_context
     context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
     node:
