@@ -27,14 +27,15 @@ case ARGV[1]
     end
     if not required_plugins.empty?
       required_plugins.each do |plugin|
-        process = Vagrant::Util::Subprocess.execute(
-          "vagrant",
-          "plugin", 
-          "install",
-           plugin
-          )
-        puts process.stdout if process.stdout        
-        puts process.stderr if process.stderr        
+        puts "Run `vagrant plugin install #{plugin}`"
+        # process = Vagrant::Util::Subprocess.execute(
+        #   "vagrant",
+        #   "plugin", 
+        #   "install",
+        #    plugin
+        #   )
+        # puts process.stdout if process.stdout        
+        # puts process.stderr if process.stderr        
       end
     end     
   when "test"
