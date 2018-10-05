@@ -36,35 +36,42 @@ end
 
 desc "say hello"
 task :hello do
-  system("echo hello")
+  puts "hello"
 end
 
 desc "Run tests"
 task :tests do
-  system("echo Running vagrant tests ...")
+  puts "Running vagrant tests ..."
   timestamp = Time.now.utc.strftime('%Y%m%d%H%M%S')
   environment_context_file = ".vagrant/.environment_context"
   current_context = File.read(environment_context_file) rescue 'all'
-  system("echo Testing environment create")
+  puts "Testing environment create"
   system("vagrant environment create dummy-#{timestamp}")
-  system("echo Testing environment activate")
+  puts "Testing environment activate"
   system("vagrant environment activate dummy-#{timestamp}")
-  system("echo Testing node create")
+  puts "Testing node create"
   system("vagrant node create -e dummy-#{timestamp} -n dummy-#{timestamp} -g dummy")
-  system("echo Testing vagrant inventory create")
+  puts "Testing vagrant inventory create"
   system("vagrant inventory create dummy-#{timestamp}")
-  system("echo Testing vagrant status")
+  puts "Testing vagrant status"
   system("vagrant status")
-  system("echo Testing vagrant up")
+  puts "Testing vagrant up"
   system("vagrant up dummy-#{timestamp}")
-  system("echo Testing vagrant halt")
+  puts "Testing vagrant halt"
   system("vagrant halt dummy-#{timestamp}")
-  system("echo Testing vagrant destroy with --force")
+  puts "Testing vagrant destroy with --force"
   system("vagrant destroy dummy-#{timestamp} --force")
-  system("echo Testing vagrant environment remove with --force")
-  system("vagrant environment remove dummy-#{timestamp} --force")
-  system("echo activating previously active environment")
+  machine_folder = ".vagrant/machines/dummy-#{timestamp}"
+  puts "Removing machine folder #{machine_folder}"
+  begin
+    FileUtils::rmtree machine_folder if File.exist?(machine_folder)
+  rescue Exception => e
+    system("Failed to remove #{machine_folder}!")
+  end
+  puts "Restoring original environment context"
   system("vagrant environment activate #{current_context}")
+  puts "Testing vagrant environment remove with --force"
+  system("vagrant environment remove dummy-#{timestamp} --force")
 end
 
 def assert_execution(condition)

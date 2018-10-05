@@ -6,6 +6,8 @@ settings:
     paths:
       basedir: provisioners/ansible
       cfg: ansible.cfg
+      playbooks:
+        set: ".vagrant/.playbooks_grouped.yaml"
     mode: controller #standalone
     surrogate: ansible-controller
     vardir: ".vagrant/machines/%s/provisioners/ansible"
@@ -15,7 +17,7 @@ settings:
       playbook_name: playbook.scratch.yaml
     options:
       global:
-        config_file: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg
+        config_file: "<%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg"
         # extra_vars:
           # clear_module_cache: true
           # ansible_ssh_user: 'vagrant'
@@ -57,16 +59,16 @@ settings:
     sizing:
       small:
         memory: 512
-        vcpu: 1
+        cpus: 1
       medium:
         memory: 1024
-        vcpu: 1
+        cpus: 1
       large:    
         memory: 2048
-        vcpu: 2
+        cpus: 2
       xlarge:    
         memory: 4096
-        vcpu: 4
+        cpus: 4
   logging:
     debug: false
     logs_dir: ".vagrant/var/log"
@@ -121,11 +123,18 @@ settings:
       adhoc: 
         files: lib/commands/*.rb
     defaults:
+      autostart: false
+      config:
+        boot_timeout: 300
       nodes:
         keys:
           box: 'ubuntu/xenial64'
           desktop: false
           provision: true
+          natdnshostresolver1: "'on'"
+          VBoxInternal2:
+            SharedFoldersEnableSymlinksCreate:
+              v_root: 1
         size: medium
     default_provider: 'virtualbox'
     templates:
@@ -141,6 +150,35 @@ settings:
         # - 'etc/sshkeys/secure'
       insert_key: false
       username: vagrant
+    synced_folder:
+      defaults:
+        type: virtualbox
+        create: false
+        owner: vagrant
+        group: vagrant
+        disabled: false
+        mount_options: []
+        nfs:
+          udp: true
+          version: 3
+          linux:
+            nfs:
+              options:
+              - rw
+              - no_subtree_check
+              - all_squash
+              - async
+        rsync:
+          args: 
+            - '--verbose'
+            - '--archive'
+            - '--delete'
+            - '-z'
+          auto: true
+          exclude: 
+            - '.vagrant/'
+        smb:
+          mount_options: []
     no_mount_vagrant: false
     # disable nfs for windows vhosts (for now)
     # see https://github.com/winnfsd/vagrant-winnfsd/issues/53
@@ -157,7 +195,7 @@ settings:
     vm_usable_port_range_end: 10000
     local_data_dir: ".vagrant"
     basedir:
-      posix: '.'
+      posix: '<%= Dir.pwd %>'
       windows: '/vagrant'
     vcpu_minimum: 1
     vmem_minimum: 512

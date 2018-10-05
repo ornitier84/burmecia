@@ -1,5 +1,5 @@
 ---
-- name: 'physical01.contoso.com'
+- name: <%= machine_name %>
   groups:
     - 'managed-servers'
   managed: true

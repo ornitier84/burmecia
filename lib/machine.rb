@@ -4,40 +4,68 @@ module VenvMachine
 
 		def configure(node_object, machine)
 			
-			# Determine if we should use NFS mounts for Vagrant Synced Folders
-			use_nfs = [node_object.key?("use_nfs"),!node_object["use_nfs"].nil?].all? ?
-			node_object["use_nfs"] : $vagrant.use_nfs || false
-			nfs_mount_options = [node_object.key?("nfs_mount_options"),!node_object["nfs_mount_options"].nil?].all? ?
-			node_object["nfs_mount_options"] : $vagrant.nfs_mount_options
-			
-			# Determine if we should mount the project root to /vagrant
-			no_mount_vagrant = [node_object.key?("no_mount_vagrant"),!node_object["no_mount_vagrant"].nil?].all? ?
-			node_object["no_mount_vagrant"] : $vagrant.no_mount_vagrant || false
-			if use_nfs and !no_mount_vagrant
-				machine.vm.synced_folder ".", "/vagrant", nfs: use_nfs, mount_options: nfs_mount_options
-			elsif no_mount_vagrant
-				machine.vm.synced_folder ".", "/vagrant", disabled: true
-			end
+			if node_object.key?("synced_folder") and !node_object['synced_folder'].nil?
+			    node_object['synced_folder'].each do |item, folder|
+			      if !folder['source'].nil? and !folder['target'].nil?
+			      	if !File.exist?(folder['source'])
+			      		next
+			      	end
+			        type = !folder['type'].nil? ? folder['type'] : $vagrant.synced_folder.defaults.type
+			        create = !folder['create'].nil? ? folder['create'] : $vagrant.synced_folder.defaults.create
+			        disabled = !folder['disabled'].nil? ? folder['disabled'] : $vagrant.synced_folder.defaults.disabled
 
-			# Mount synced folders as defined in node yaml
-			if node_object.key?("synced_folders") and !node_object["synced_folders"].nil?
-				node_object["synced_folders"].each do |folders|
-					folders.each do |h,f|
-						if File.exist?(h)
-							if use_nfs
-						 		machine.vm.synced_folder h, f, nfs: use_nfs, mount_options: nfs_mount_options
-						 	else
-						 		machine.vm.synced_folder h, f
-							end
-						else
-							if @debug
-								$logger.warn($warnings.synced_folder_not_found % h)
-							end
-						end
-					end
-				end
-			end
+			        # backwards compat: check if using nfs
+			        if !folder['nfs'].nil? and folder['nfs']
+			          type = 'nfs'
+			        end
 
+			        # NFS
+			        if type == 'nfs'
+			          nfs_udp = !folder['nfs_udp'].nil? ? folder['nfs_udp'] : $vagrant.synced_folder.defaults.nfs.udp
+			          nfs_version = !folder['nfs_version'].nil? ? folder['nfs_version'] : $vagrant.synced_folder.defaults.nfs.version
+			          linux_nfs_options = !folder['linux__nfs_options'].nil? ? folder['linux__nfs_options'] : $vagrant.synced_folder.defaults.nfs.linux.nfs.options
+
+			          machine.vm.synced_folder folder['source'], folder['target'], 
+			            type: type, 
+			            nfs_udp: nfs_udp
+			        
+			        # RSYNC
+			        elsif type == 'rsync'
+			          rsync_args = !folder['rsync__args'].nil? ? folder['rsync__args'] : $vagrant.synced_folder.defaults.rsync.args
+			          rsync_auto = !folder['rsync__auto'].nil? ? folder['rsync__auto'] : $vagrant.synced_folder.defaults.rsync.auto
+			          rsync_exclude = !folder['rsync__exclude'].nil? ? folder['rsync__exclude'] : $vagrant.synced_folder.defaults.rsync.auto
+
+			          machine.vm.synced_folder folder['source'], folder['target'], 
+			            type: type, 
+			            create: create,
+			            disabled: disabled, 
+			            rsync__args: rsync_args, 
+			            rsync__auto: rsync_auto, 
+			            rsync__exclude: rsync_exclude
+			        elsif type == 'smb'
+			          mount_options = !folder['mount_options'].nil? ? folder['mount_options'] : $vagrant.synced_folder.defaults.smb.mount_options
+			          machine.vm.synced_folder folder['source'], folder['target'], 
+			            type: type, 
+			            create: create,
+			            disabled: disabled,
+			            :mount_options => mount_options
+			        # No type found, use old method
+			        else
+			          owner = !folder['owner'].nil? ? folder['owner'] : ''
+			          group = !folder['group'].nil? ? folder['group'] : ''
+			          mount_options = !folder['mount_options'].nil? ? folder['mount_options'] : $vagrant.synced_folder.defaults.mount_options
+
+			          machine.vm.synced_folder folder['source'], folder['target'], 
+			            type: type,
+			            create: create,
+			            disabled: disabled, 
+			            owner: $vagrant.synced_folder.defaults.owner,
+			            group: $vagrant.synced_folder.defaults.group,
+			            :mount_options => mount_options
+			        end
+			      end
+			    end
+			  end		
 		end
 
 	end
@@ -55,6 +83,12 @@ module VenvMachine
 	end
 
 	class Hardware
+
+		def initialize
+			require_relative 'providers'
+			@virtualbox = VenvProviders::VirtualBox.new
+			@libvirt = VenvProviders::LibVirt.new
+		end
 
 		def get_local_resources(platform, resource)
 		  commands = {
@@ -101,41 +135,22 @@ module VenvMachine
 		    when $platform.is_osx
 		      _os = 'osx'
 		  end
-		  vcpu = node_object['vcpu'] || $vagrant.vcpu_minimum || get_local_resources(_os,'vcpu') / $vagrant.vcpu_allocation_ratio
-		  vmem = node_object['vmem'] || $vagrant.vmem_minimum || get_local_resources(_os,'vmem') / $vagrant.vmem_allocation_ratio 
-		  # If possible, Use same number of CPUs within Vagrant as the system, defaults to specification from vagrant.config.yaml
-		  # Use at least a predetermined amount of RAM, see vagrant.config.yaml
-		  # Actually provide the computed CPUs/memory to the backing provider		  
-		  if $is_virtualbox
-			  if $plugin_disksize_available
-			  	config.disksize.size = node_object['vmsize'] if node_object.key?('vmsize')
-			  end
-			  config.vm.provider :virtualbox do |vb|
-			    vb.name = node_object['name']
-			    vb.cpus = vcpu
-			    vb.memory = vmem
-			  end
+	      if node_object.key?("provider") and !node_object['provider'].nil?
+	          begin
+		          # Loop through providers
+		          node_object['provider'].each do |prov, options|
+		            case prov
+		          		when 'virtualbox'
+		          			@virtualbox.configure(machine, node_object, prov, options)
+		          		when 'libvirt'
+		          			@libvirt.configure(machine, node_object, prov, options)
+		          	end
+		          end
+		      rescue => e
+		      	$logger.error($errors.machine.provider.syntax % e.backtrace.first)
+	      	  end
 
-		  end
-
-		  if $is_kvm
-			  config.vm.provider :libvirt do |lv|
-			    lv.memory = vmem
-			    lv.cpus = vcpu
-			    lv.machine_virtual_size = node_object['vmsize'] if node_object.key?('vmsize')
-			    if node_object.key?('disks') and !node_object['disks'].nil?
-			      disks = node_object['disks']
-			      disks.each do |disk|
-			        lv.storage :file, :size => disk['size']
-			      end
-			    end
-			  end # config.vm.provider
-		  end
-	
-		  # Configure Provider Options
-		  require_relative 'providers'
-		  provider = VagrantProviders::Provider.new
-		  provider.configure(config, node_object)
+	      end		  
 
 		end	
 

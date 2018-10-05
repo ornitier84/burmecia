@@ -28,12 +28,12 @@ class Context
     
     # Determine environment context (if applicable)
     if File.exist?($environment.context_file)
-      environment = File.read($environment.context_file)
+      environment = File.read($environment.context_file).chomp()
       environment_path = environment == 'all' ?
       $environment.basedir : "#{$environment.basedir}/#{environment}"      
       if !File.exist?(environment_path)
         $logger.error($errors.environment.path.notfound % environment_path)
-        exit
+        abort
       else      
         return environment
       end
@@ -80,11 +80,11 @@ class Nodes
     if list_hosts_only
       # Read node yaml definitions
       hosts = []
-      Find.find(environment_path) do |f|
-        node_folder = File.dirname(f).split(File::SEPARATOR)[-1]
+      Find.find(environment_path) do |machine_definition_file|
+        node_folder = File.dirname(machine_definition_file).split(File::SEPARATOR)[-1]
         Find.prune if node_folder.match(exclude_paths)
-        next unless f.match(include_files)
-        hosts.push(File.basename(f,".*"))
+        next unless machine_definition_file.match(include_files)
+        hosts.push(File.basename(machine_definition_file".*"))
       end
       return hosts
     else  
@@ -93,10 +93,10 @@ class Nodes
       node_names = []
 
       # Read node yaml definitions
-      Find.find(environment_path) do |f|
-        node_folder = File.dirname(f).split(File::SEPARATOR)[-1]
-        node_folder_parent = File.dirname(f).split(File::SEPARATOR)[2]
-        environment_path_fq = File.expand_path("../..", File.dirname(f))
+      Find.find(environment_path) do |machine_definition_file|
+        node_folder = File.dirname(machine_definition_file).split(File::SEPARATOR)[-1]
+        node_folder_parent = File.dirname(machine_definition_file).split(File::SEPARATOR)[2]
+        environment_path_fq = File.expand_path("../..", File.dirname(machine_definition_file))
         # skip anything we don't like, as defined in config.yaml
         if !node_folder.nil?
           Find.prune if node_folder.match(exclude_paths)
@@ -104,23 +104,27 @@ class Nodes
         if !node_folder_parent.nil?
           Find.prune if node_folder_parent.match(exclude_paths)
         end
-        next unless f.match(include_files)
-        next unless !f.match(exclude_files)
+        next unless machine_definition_file.match(include_files)
+        next unless !machine_definition_file.match(exclude_files)
 
+        # Derive the machine name from its machine definition file
+        machine_name = File.basename(machine_definition_file.split(File::SEPARATOR)[-1],File.extname(machine_definition_file))        
         # start reading through the pruned yaml files
         begin
-          y = YAML.load(ERB.new(File.read(f)).result)
+          y = YAML.load(ERB.new(File.read(machine_definition_file)).result(binding))
         rescue Exception => e
-          $logger.error($errors.definition.yaml_syntax % [f, 'yaml error']) if $logger
-          $logger.warn($warnings.definition.skipping % [f, 'yaml error']) if $logger
+          $logger.error($errors.definition.yaml_syntax % [machine_definition_file, 'yaml error']) if $logger
+          $logger.warn($warnings.definition.skipping % [machine_definition_file, 'yaml error']) if $logger
           next
         end
         unless y.respond_to?('first')
-          $logger.error($errors.definition.yaml_syntax % f) if $logger
-          $logger.warn($warnings.definition.skipping % f) if $logger
+          $logger.error($errors.definition.yaml_syntax % machine_definition_file) if $logger
+          $logger.warn($warnings.definition.skipping % machine_definition_file) if $logger
           next
         end
+        # Derive the node definition
         node_definition = y.first
+        $logger.info($info.generic.message % "machine_name for #{node_definition['name']} is #{machine_name}") if $debug and $verbose
         # Each node belongs to at least one group, it's parent folder name
         if node_definition.key?('groups')
           y.first['groups'].push(node_folder) unless node_definition.include?(node_folder)
@@ -133,11 +137,11 @@ class Nodes
             y.first[k] = v
           end
         end
-        
+
         # Populate node environment keys
         y.first['environment_path'] = environment_path_fq
         # Populate node definition key
-        y.first['node_definition_path'] = File.dirname(f)
+        y.first['node_definition_path'] = File.dirname(machine_definition_file)
         # Populate machine path
         y.first['machine_dir'] = "#{Dir.pwd}/#{$vagrant.local_data_dir}/machines/#{y.first['name']}/#{$provider_name}"
         # Populate is_created property
@@ -148,7 +152,7 @@ class Nodes
         node_name = node_definition['name']
         # Skip duplicate machine definitions (according to machine 'name' property)
         if node_names.include? node_name
-          $logger.warn($warnings.definition.skipping % [f, "Duplicate node name: #{node_name}"]) if $logger
+          $logger.warn($warnings.definition.skipping % [machine_definition_file, "Duplicate node name: #{node_name}"]) if $logger
           next
         end
         node_names.push(node_name)
@@ -171,22 +175,46 @@ class Nodes
             ].all?
           ].all?
           $nodes_were_skipped = true
-          $logger.warn($warnings.definition.skipping % [f, 'libvirt not available']) if $logger and $debug
+          $logger.warn($warnings.definition.skipping % [machine_definition_file, 'libvirt not available']) if $logger and $debug
           next
         end
         node_set += y
       end
-      return node_set
+      $target_all_machines = false
+      # Are we targeting a subset of machines?
+      $node_subset = node_set.select { |k, v| ARGV.include?(k['name']) }
+      # Ansible 'controller mode' logic
+      if [
+        [!$node_subset.nil?, !$node_subset.empty?].all?,
+        [$managed, $ansible.mode == 'controller'].any?,
+        ARGV.include?($ansible.surrogate)
+        ].all?
+        # TODO
+        # Dedupe derivation of ansible_surrogate_object, as it already occurs in cli.rb
+        ansible_surrogate_object = $node_subset.select { |k, v| k['name'] == $ansible.surrogate}.first    
+        if ansible_surrogate_object.nil?
+          ansible_surrogate_object = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first    
+          return $node_subset.push(ansible_surrogate_object)       
+        else
+          return $node_subset
+        end
+      else
+        if $vagrant_args
+		$target_all_machines = true if $vagrant_args[-1] == 'provision'
+        end
+        return node_set
+      end
 
     end
 
   end
 
-  def create(node_name, node_group, node_environment, node_box, node_size='medium')
+  def create(node_name, node_group, node_environment, node_box, node_size='medium', boot_timeout)
     
     @node_name = node_name
     @node_box = node_box
     @node_size = node_size
+    @boot_timeout = boot_timeout
     groups = Groups.new
     groups.create(node_group, node_environment)
     node_environment_path = "#{$environment.basedir}/#{node_environment}"

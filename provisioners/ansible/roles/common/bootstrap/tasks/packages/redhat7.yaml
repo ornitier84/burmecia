@@ -1,12 +1,18 @@
-- name: packages | redhat7 | Add epel repository
-  yum: name={{item}} state=present
-  with_items:
-    - epel-release
-  tags: [base_config,packages]
+# - name: packages | redhat7 | Add epel repository
+#   yum: name={{epel_repo}} state=present
+#   with_items:
+#     - epel-release
+#   loop_control:
+#     loop_var: epel_repo 
+
+- name: packages | redhat7 | Install EPEL Repo
+  yum:
+    name: http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present 
 
 - name: packages | redhat7 | install relevant python packages 
   yum: 
-    name: "{{ item }}"
+    name: "{{ python_package }}"
     state: present
   with_items:
     - python-devel
@@ -23,11 +29,14 @@
     - fail2ban
   loop_control:
     loop_var: security_package    
-  ignore_errors: true  
+  ignore_errors: true
 
-- pip:
-    name: "{{ item }}"
+- name: packages | redhat7 | Install selinux python requirements for ansible
+  yum: 
+    name: "{{ selinux_python_package }}"
+    state: present
   with_items:
     - libselinux-python
     - policycoreutils-python
-  
+  loop_control:
+    loop_var: selinux_python_package    

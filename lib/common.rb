@@ -44,7 +44,7 @@ module VenvCommon
       @@vagrant_cmd = Vagrant::Util::Which.which("vagrant")
 	end
 
-	def run_cmd(cmd)
+	def run_cmd(cmd, env={})
     	#
     	# Launch subprocess
     	#

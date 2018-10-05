@@ -17,3 +17,5 @@
       skip: true
 
 - include_tasks: ssh-config.yaml
+
+- include_tasks: networking.yaml

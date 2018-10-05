@@ -33,8 +33,7 @@ if ARGV.length == 3
       FileUtils.rm_f semaphore_file 
     else
       puts "option already off: semaphore #{semaphore_file} is not present"
-    end    
-
+    end
   else
     puts opt_parser
   end

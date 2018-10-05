@@ -24,13 +24,16 @@ strings:
       activate: |-
         Activating vagrant environment %s
         Environment context file is %s.
+    generic:
+      message: |-
+        Generic Message: %s
+    group:
+      up: |-
+        Bringing up node group %s
     inventory:
       file:
         write: |-
           Writing inventory file %s
-    group:
-      up: |-
-        Bringing up node group %s
     managed:
       provisioners:
         ansible:
@@ -54,7 +57,10 @@ strings:
           Local command execution was successful, output was: %s
       ansible:
         controller: |-
-          Ansible provisioner is in 'controller' mode. Running %s ansible actions from %s 
+          Ansible provisioner is in 'controller' mode. 
+          Running ansible actions from %{ansible_surrogate}
+          Machine targets: 
+          %{machines}
     singleton:
       ssh:
         command: |-
@@ -75,6 +81,18 @@ strings:
       You are missing at least one required vagrant plugin, install with:
     missing_plugin_install: |-
       rake init or vagrant plugin install %s
+    provisioners:
+      ansible:
+        controller:
+          nodes:
+            not_created: |-
+              Ansible provisioner is in 'controller' mode and the node %{machine} is not yet created.
+              As such, I am skipping the ansible provisionment step.
+              Once it has been created, please run the provisionment action manually:
+              vagrant provision %{machine}
+      fso:
+        not_found: |-
+          The file object was not found: %s
     synced_folder_not_found: |-
       Could not find path %s, skipping synced folder
     definition:
@@ -117,7 +135,9 @@ strings:
     inventory:
       file:
         error: |-
-          Error in writing inventory file, error was: %s
+          Error in writing inventory file
+          Error: %s
+          Excerpt from backtrace: %s
       path:
         notfound: |-
           The environment you specified has no environment directory: %s
@@ -130,6 +150,7 @@ strings:
           The environment path you specified (%s) was not found.
           Because of this failure in node definitions, 
           Your nodes will not be listed and available for interaction.
+          Review the contents of the environment the environment context file: $environment.context_file
           Activate an existing environment to clear this error, e.g.
           vagrant activate contoso
     definition:
@@ -141,6 +162,10 @@ strings:
         you simply forgot to include a box specification.
         Consult the 'Usage' section in the README or review the node definition template 
         Under the 'examples' directory
+    machine:
+      provider:
+        syntax: |-
+          Encountered an error during initialization of provider options, error was %s
     managed:
       not_reachable: |-
         The specified managed node is not reachable and/or not accepting requests for management: %s
@@ -160,6 +185,14 @@ strings:
         failed: |-
           Local command execution failed with error: %s
       ansible:
+        controller:
+          args:
+            unsupported: |-
+              Ansible provisioner is in 'controller' mode.
+              You must call the provision action ensuring the ansible surrogate hostname
+              is specified first, as with:
+              vagrant provision %{surrogate} %{machine}
+              Skipping ansible provisionment
         surrogate:
           not_reachable: |-
             Windows platform detected. 
@@ -184,6 +217,7 @@ strings:
       For the full backtrace, set the debug option in config.yaml to 'true'
     unhandled: |-
       I encountered an unhandled exception
-      Error was %s
+      Error: %s
+      Excerpt from backtrace: %s
       Try enabling debugging via
       vagrant option debug on

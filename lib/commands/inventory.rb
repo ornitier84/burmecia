@@ -20,9 +20,9 @@ when "create"
     begin
       inventory.write(environment_context)
     rescue Exception => e
-      $logger.error($errors.inventory.file.error % e)
+      $logger.error($errors.inventory.file.error % [e, e.backtrace.first.to_s.bold])
     end
-    exit
+    abort
   end      
 else
   puts opt_parser

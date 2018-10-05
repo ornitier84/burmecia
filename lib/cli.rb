@@ -51,7 +51,7 @@ module VenvCLI
       @controls.halt(node_object, machine)
     end
 
-    def up(node_object, node_set=nil, config=nil, machine=nil, target_machine=nil)
+    def up(node_object, node_set=nil, config=nil, machine=nil)
       # Remind me to specify libvirt hypervisor if we're on non-windows OS
       if [!$platform.is_windows, $debug].all?
         $logger.warn($warnings.libvirt_windows_os)
@@ -91,7 +91,11 @@ module VenvCLI
         @syncedfolders.configure(node_object, machine)
       end
       # Provision Machine if applicable
-      no_provision = [$no_provision, node_object['provision'] == 'false', (ARGV.include? "--no-provision"), node_object['name'] == target_machine].any?
+      no_provision = [
+        $no_provision,
+        !node_object.key?('provisioners'),
+        (ARGV.include? "--no-provision")
+      ].any?
       unless no_provision
         if $managed
           provision(node_object, node_set)
@@ -106,7 +110,7 @@ module VenvCLI
     def provision(node_object, node_set=nil, machine=nil)
       if ARGV.include? 'up' and !node_object['is_provisioned']
         @provisioners.run(node_object, node_set, machine) 
-      elsif  ["provision", "reload"].any? { |arg| ARGV.include? arg }
+      elsif  ["provision"].any? { |arg| ARGV.include? arg }
         @provisioners.run(node_object, node_set, machine)
       end
     end
@@ -141,7 +145,7 @@ module VenvCLI
         all_groups = (node_set.map {|n| [n["groups"]]})
         if !all_groups.include?($node_group)
           $logger.error($errors.group.not_found % $node_group)
-          exit
+          abort
         end
         $logger.info($info.group.up % $node_group)
         node_set.each do |node_object|

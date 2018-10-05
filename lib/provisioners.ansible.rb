@@ -51,11 +51,38 @@ module VenvProvisionersAnsible
 
   class Playbook
 
+    def initialize()
+
+      @sync_dir = $platform.is_windows ? '.' : $vagrant.basedir.posix
+
+    end
+
     def create_var_folder(var_path)
       if not File.exist?(var_path)
         FileUtils::mkdir_p var_path
       end
     end
+
+    def write_set(playbook_files)
+
+      playbook_content = ""
+      playbook_files.each do |item|
+        playbook_content += "- #{$ansible.default_include_statement}: #{item['playbook']} hosts=#{item['host']}\n"
+      end
+      playbook_file = "#{@sync_dir}/#{$ansible.paths.playbooks.set}"
+      $logger.info "Writing #{playbook_file}" if $debug
+      begin
+        File.open(playbook_file, "w") do |file|
+          file.write playbook_content
+        end
+      rescue Exception => e
+         $logger.error($errors.fso.operations.failure % e)
+         abort
+      end
+      return playbook_file
+
+    end
+    
 
     def write(host, provisioner)
 
@@ -68,8 +95,8 @@ module VenvProvisionersAnsible
 
       # Write the main playbook
     ######Check for playbook specification#BEGIN
-      if provisioner['ansible'].key?("playbooks") and !provisioner['ansible']['playbooks'].nil?
-          playbooks = provisioner['ansible']['playbooks']
+      if provisioner.key?("playbooks") and !provisioner['playbooks'].nil?
+          playbooks = provisioner['playbooks']
           playbook_list = []
           # Read playbook specification 
           ######Parse Playbooks#BEGIN
@@ -98,12 +125,12 @@ module VenvProvisionersAnsible
             playbook_list = []
           end
           ######Parse Playbooks#END
-          scratch_playbook = _write(host, provisioner['ansible'])
+          scratch_playbook = _write(host, provisioner)
           playbook_list.push({$ansible.default_include_statement => scratch_playbook})
           playbook_obj = playbook_list
         else
           # Write the scratch playbook
-          scratch_playbook = _write(host, provisioner['ansible'])
+          scratch_playbook = _write(host, provisioner)
           playbook_obj = [{$ansible.default_include_statement => scratch_playbook}]
       end 
     ######Check for playbook specification#END
@@ -125,15 +152,21 @@ module VenvProvisionersAnsible
         rescue Exception => e
           $logger.error($errors.fso.operations.failure % e)
         end
+      else
+          $logger.warn($warnings.provisioners.fso.not_found % ansible_extra_objects_dir) if $debug
       end
 
       # Write the main playbook file
       main_playbook_file = "#{vagrant_ansible_var_folder_real_path}/main.yaml"
       
-      $logger.info "Writing #{main_playbook_file}" if @debug
+      $logger.info "Writing #{main_playbook_file}" if $debug
 
-      File.open(main_playbook_file,"w") do |file|
-        file.write playbook_hash
+      begin
+        File.open(main_playbook_file,"w") do |file|
+          file.write playbook_hash
+        end
+      rescue Exception => e
+         $logger.error($errors.fso.operations.failure % e)
       end
       
       # Define the main playbook from the vm perspective
@@ -141,7 +174,11 @@ module VenvProvisionersAnsible
       
       $logger.info "#{vagrant_ansible_var_folder}/main.yaml" if @debug
       
-      return "#{vagrant_ansible_var_folder}/main.yaml"  
+      return { 
+        "playbook" => "#{vagrant_ansible_var_folder}/main.yaml",
+        "host" => host['name']
+      }
+
     end
 
     def _write(host, ansible_hash_value)
@@ -157,33 +194,31 @@ module VenvProvisionersAnsible
       # Create node-specific ansible var folder
       create_var_folder(vagrant_ansible_var_folder_real_path)
       
-      playbook_hash = { 'hosts' => host['name'] }
+      # playbook_hash = { 'hosts' => host['name'] }
+      
+      # Construct the ansible vars hash
       # YAML representation:
       # vars:
-      #   vagrant_basedir: some/path  
-      # construct the ansible vars hash
+      #   vagrant_basedir: some/path
+      default_vars_hash = {
+        'vagrant_basedir' => sync_dir,
+        'environment_basedir' => $environment.basedir,
+        'environment_context' => $environment.context,
+        'keys_dir' => "#{$environment.basedir}/ssh"
+      }      
       if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?
         case ansible_hash['vars']
         when Hash
-          default_vars_hash = {
-            'vagrant_basedir' => sync_dir,
-            'environment_basedir' => $environment.basedir,
-            'environment_context' => $environment.context,
-            'keys_dir' => "#{$environment.basedir}/ssh"
-          }
           vars_hash = {'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
         when Array
           default_vars_hash = { 'vars' =>
-            [
-              {'vagrant_basedir' => sync_dir,
-              'environment_basedir' => $environment.basedir,
-              'environment_context' => $environment.context
-              }
-            ]
+            [ default_vars_hash ]
           }
           vars_hash = {'vars' => default_vars_hash['vars'].concat(ansible_hash['vars'])}
         end
         ansible_hash.delete("vars")
+      else
+        ansible_hash['vars'] = default_vars_hash
       end
       # Remove the inventory key if it's present, as this is not a 
       # playbook feature

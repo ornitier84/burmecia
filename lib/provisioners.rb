@@ -7,114 +7,98 @@ module VenvProvisioners
 			require_relative 'common'			
 			@node = VenvCommon::CLI.new
 			@ansible_settings = VenvProvisionersAnsible::Settings.new
+			@playbook = VenvProvisionersAnsible::Playbook.new
 		end
 
-		def ansible(node_object, node_set=nil, machine=nil)
-		      # Imports
-			  # Instantiate the vagrant provisioner class 
-			  playbook = VenvProvisionersAnsible::Playbook.new
-		      # Provisioning configuration for ansible
-		      if node_object.key?("provisioners") 
-		        node_object["provisioners"].each do |provisioner|
-		          provisioner_name = provisioner.keys.first()
-		          if provisioner_name == "ansible"
-		            # Check for an inventory file specification
-		            if provisioner[provisioner_name].key?("inventory")
-		                if $platform.is_windows
-		                  @inventory = provisioner[provisioner_name]['inventory'].start_with?('/') ? 
-		                  provisioner[provisioner_name]['inventory'] :
-		                  "#{$vagrant.basedir.windows}/#{provisioner[provisioner_name]['inventory']}"
-		                else
-		                  @inventory = provisioner[provisioner_name]['inventory'].start_with?('/') ? 
-		                  provisioner[provisioner_name]['inventory'] :
-		                  "#{$vagrant.basedir.posix}/#{provisioner[provisioner_name]['inventory']}"
-		                end
-		            else
-		                @inventory = $platform.is_windows ? 
-		                "#{$vagrant.basedir.windows}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
-		                "#{$vagrant.basedir.posix}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
-		            end
-		            # Write scratch playbook
-		            @playbook = playbook.write(node_object, provisioner)
-		            # If the virtual host is running a Windows OS, we run ansible locally on the VM or on the ansible controller
-		            if $platform.is_windows
-		            	# Invoke the ansible playbook commands
-		            	if [$managed, $ansible.mode == 'controller'].any? and ARGV[-1] != $ansible.surrogate
-						    # TODO
-						    # Dedupe derivation of ansible_surrogate_object, as it already occurs in cli.rb
-						    ansible_surrogate_object = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
-							if !ansible_surrogate_object['is_created']
-								$logger.error($errors.provisioners.ansible.surrogate.not_reachable % {machine:$ansible.surrogate})
-								exit
-							end
-						    $logger.info($info.provisioners.ansible.controller % [node_object['name'], $ansible.surrogate, ])
-			            	# Derive node groups
-						  	groups = node_object.key?('groups') ? 
-			              	node_object['groups'].map { |g| "#{g}" }.join(":") : false          	
-						    # Build ssh commands
-						    prefix = $dry ? "echo" : " "
-						    limit_hostname="-l all"
-						    connection = "ssh"
-						    args = [ "export ANSIBLE_KEEP_REMOTE_FILES=#{$ansible.env.ansible_keep_remote_files};",
-						    "export ANSIBLE_CONFIG=#{$ansible.options.global.config_file};",
-						    "#{prefix} $(which ansible-playbook) #{@playbook}",
-						    "--inventory-file=#{@inventory}",
-						    "#{limit_hostname}",
-						    "--extra-vars is_windows=true,provisioners_root_dir=#{$vagrant.basedir.windows},host_key_checking=False",
-					        "--connection=#{connection} $(test #{$ansible.options.local.vault_password_file} && echo --vault-password-file=#{$ansible.options.local.vault_password_file})" ]
-		              	    ssh_cmd = args.join(' ')
-		              	    # Remove unnecessary args from ARGV for the subshell call to vagrant
-		              	    if ARGV[-1] != $ansible.surrogate
-		              	    	ARGV.delete("#{ARGV[-1]}")
-		              	    	ARGV.delete("provision") 
-		              	    end
-		              	    if $pry_debugger_available and $debug
-			              	    Pry.rescue do
-			              	    @node.ssh_singleton(
-			              	    	{'name' => $ansible.surrogate},
-			              	    	ssh_cmd
-			              	    	)
-			              		end
-		              		else
-			              	    @node.ssh_singleton(
-			              	    	{'name' => $ansible.surrogate},
-			              	    	ssh_cmd
-			              	    	)		              			
-		              		end
-		            	else
-							machine.vm.provision "ansible_local" do |ansible|
-							  ansible.playbook = @playbook
-							  ansible.groups = @group_set if @group_set
-							  if $pry_debugger_available and $debug
-								  Pry.rescue do
-								  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
-								  end
-								else
-									@ansible_settings.eval_ansible(node_object, ansible, local: true)
-							  end
-							end		            	
-		            	end
-		            # ^^^^^^^^^^
-		            else
-		              # If the virtual host is running a Posix-Compliant OS, we run ansible locally on the VM host
-		              # ----------
-		              machine.vm.provision 'ansible' do |ansible|
-		                ansible.inventory_path = @inventory if @inventory
-		                ansible.playbook = @playbook                
-		                ansible.groups = @group_set if @group_set
-					    if $pry_debugger_available and $debug		                
-			                Pry.rescue do
-								@ansible_settings.eval_ansible(node_object, ansible)
+		def ansible(node_object, provisioner, node_set=nil, machine=nil)
+			#####
+			# Determine the ansible provisioner
+			ansible_provisioner = $platform.is_windows ? "ansible_local" : "ansible"
+			if provisioner.key?("inventory") and !provisioner['inventory'].nil?
+				if $platform.is_windows
+					@inventory = provisioner['inventory'].start_with?('/') ?
+					provisioner['inventory'] :
+					"#{$vagrant.basedir.windows}/#{provisioner['inventory']}"
+				else
+					@inventory = provisioner['inventory'].start_with?('/') ?
+					provisioner['inventory'] :
+					"#{$vagrant.basedir.posix}/#{provisioner['inventory']}"
+				end
+			else
+				@inventory = $platform.is_windows ?
+				"#{$vagrant.basedir.windows}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
+				"#{$vagrant.basedir.posix}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+			end
+			# 'controller' mode logic
+			if [([$managed, $ansible.mode == 'controller'].any?),
+			(!$node_subset.nil?),
+			($vagrant_args[-1] != $ansible.surrogate)].all?
+				#####
+				if node_object['name'] == $ansible.surrogate
+					node_subset_sans_surrogate = $node_subset.select { |k, v| k['name'] != $ansible.surrogate }
+		            # Write scratch playbook(s)
+					playbooks = []
+					node_subset_sans_surrogate.each do |_node|
+						ansible_hash = _node['provisioners'].select{ 
+							|item| item.keys().first == 'ansible' }.first
+		            	playbooks.push(@playbook.write(_node, ansible_hash['ansible'])) if !ansible_hash.nil?
+					end
+					return if playbooks.empty?
+					$logger.info($info.provisioners.ansible.controller % { 
+						machines: node_subset_sans_surrogate.map { |s| "- #{s['name']}" }.join("\n"), 
+						ansible_surrogate: $ansible.surrogate
+						}
+					)					
+					@ansible_playbook = @playbook.write_set(playbooks)
+					machine.vm.provision ansible_provisioner do |ansible|
+						ansible.limit = "all"
+						ansible.playbook = @ansible_playbook
+						ansible.inventory_path = @inventory
+						if $pry_debugger_available and $debug
+							Pry.rescue do
+								@ansible_settings.eval_ansible(node_object, ansible, local: true)
 							end
 						else
-							@ansible_settings.eval_ansible(node_object, ansible)
-					    end
-		              end
-		              # ^^^^^^^^^^
-		          end
-		        end
-		      end
-		    end
+							@ansible_settings.eval_ansible(node_object, ansible, local: true)
+						end
+					end	
+				#####
+				elsif $ansible.mode != 'controller' or $vagrant_args[-1] == $ansible.surrogate
+				#####
+					ansible_hash = node_object['provisioners'].select{ 
+						|item| item.keys().first == 'ansible' }.first
+					machine.vm.provision ansible_provisioner do |ansible|
+					  ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
+					  ansible.inventory_path = @inventory
+					  ansible.groups = @group_set if @group_set
+					  if $pry_debugger_available and $debug
+						  Pry.rescue do
+						  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
+						  end
+						else
+							@ansible_settings.eval_ansible(node_object, ansible, local: true)
+					  end
+					end
+				end
+				#####
+			#####
+			else
+				ansible_hash = node_object['provisioners'].select{ |item| item.keys().first == 'ansible' }.first
+				machine.vm.provision ansible_provisioner do |ansible|
+				  ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
+				  ansible.inventory_path = @inventory
+				  ansible.groups = @group_set if @group_set
+				  if $pry_debugger_available and $debug
+					  Pry.rescue do
+					  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
+					  end
+					else
+						@ansible_settings.eval_ansible(node_object, ansible, local: true)
+				  end
+				end				
+			end
+			#####
+
 		end		
 
 		def local(node_object)

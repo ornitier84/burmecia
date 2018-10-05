@@ -1,8 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Bail out if we don't need to load the Vagrantfile
-exit if [ "environment","inventory","edit", "group", "node", "rake", "option" ].include?(ARGV[0])
+# Clone the ARGV array for later use, rejecting any hyphened arguments
+$vagrant_args = ARGV.clone
+$vagrant_args.delete_if { |arg| arg.include?('--') }
 # Load custom modules
 require_relative 'lib/cli'
 require_relative 'lib/environment'
@@ -38,10 +39,6 @@ def main
   node_set = context.activate(environment_context)
   # Instantiate the vagrant cli group class
   group = VenvCLI::Group.new
-  # Are we targeting a single machine?
-  target_machine = node_set.select { |k, v| k['name'] == ARGV[-1] }
-  # Are we provisioning all machines?
-  all_machines = true if ARGV[-1] == 'provision' and [target_machine.nil?, target_machine.empty?].any?
   # Boot up node groups if applicable
   group.up(node_set)
   # Treat managed/bare metal nodes
@@ -55,25 +52,27 @@ def main
   groups = VenvEnvironment::Groups.new
   # Generate the group set
   @group_set = groups.generate(node_set)
-  # Instantiate the vagrant machine settings class
+  # Instantiate the vagrant machine ssh settings class
   ssh_settings = VenvSettings::SSH.new
+  # Instantiate the vagrant machine config settings class
+  machine_settings = VenvSettings::Config.new
   # Process Virtual Machines
   Vagrant.configure($vagrant.api_version) do |config|
     node_set.each do |node_object|
         # Configure ssh settings
         ssh_settings.evaluate(node_object, config)
+        # Evaluate config.vm settings
         # Read node autostart option
-        autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : false
+        autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : $vagrant.defaults.autostart
         # Define node
         config.vm.define node_object['name'], autostart: autostart_setting do |machine|
-          # Set hostname
-          machine.vm.hostname = node_object['name']
-          # Specify vagrant box
-          machine.vm.box = node_object['box']        
+          machine_settings.evaluate(node_object, machine)
+          # machine.vm.hostname = node_object['name']
+          # machine.vm.box = node_object['config']['box']            
           if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
             node.down(node_object, machine) 
           elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
-            node.up(node_object, node_set, config, machine, target_machine)
+            node.up(node_object, node_set, config, machine)
           end
         end
     end
@@ -108,22 +107,23 @@ def main
         $logger.warn($warnings.context.nodes.empty)
       end   
         if [ "destroy", "halt", "port", "provision", "reload", "status", "up" ].include?(ARGV[0])
-          ending = Time.now
-          t = ending - DateTime.parse($starttime).to_time
+          endtime = Time.now
+          t = endtime - DateTime.parse($starttime).to_time
           $logger.info($info.time.elapsed % t)  
         end
   }
 end
 
-if $debug and $pry_debugger_available
-  Pry.rescue do
-    main  
-  end
-else
-  begin
-    main
-  rescue Exception => e
-    $logger.error($errors.unhandled % e.to_s.bold)
-    exit
+# Only invoke the main function if none of our custom commands have been called
+if ![ "environment","inventory","edit", "group", "node", "rake", "option" ].include?(ARGV[0])
+  if $debug and $pry_debugger_available
+    Pry::rescue{ main }
+  else
+    begin
+      main
+    rescue Exception => e
+      $logger.error($errors.unhandled % [e, e.backtrace.first.to_s.bold])
+      abort
+    end
   end
 end

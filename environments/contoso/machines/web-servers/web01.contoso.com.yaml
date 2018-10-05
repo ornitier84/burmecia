@@ -1,6 +1,9 @@
 ---
-- name: 'web01.contoso.com'
-  box: 'ubuntu/xenial64'
+- name: <%= machine_name %>
+  config:
+    boot_timeout: 700
+    box: 'ubuntu/xenial64'
+    hostname: <%= machine_name %>  
   desktop: False
   interfaces:
     - ip: 192.168.122.10
@@ -10,22 +13,32 @@
   port_forwards:
     - guest: 80
       host: 8080
-  vmem: 1024
   provision: true
-  vcpu: 1
   disks:
     - size: 20
       controller: "SATA Controller"
-  synced_folders:
-    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\git: '/usr/share/git'
-    - C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents: '/home/vagrant/Documents'
-  provider_options:
+  synced_folder:
+    root:
+      id: vagrant-root
+      source: ./
+      target: /vagrant  
+    documents:
+      id: documents
+      source: C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents
+      target: /home/vagrant/Documents    
+    git:
+      id: git
+      source: C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\git
+      target: /home/vagrant/git  
+  provider:
     virtualbox:
       modifyvm:
+        name: <%= machine_name %>
         natdnshostresolver1: 'on'
-        memory: 2048
+        cpus: 1
+        memory: '512'
       setextradata:
-        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1  
+        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1 
   provisioners:
     - local: |
         cmd /c "echo this is a local command on the vagrant controller"

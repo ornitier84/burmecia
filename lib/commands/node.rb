@@ -39,9 +39,10 @@ options.key?(:group),
 options.key?(:name)
 ].all?
   box = options.key?(:box) ? options[:box] : $vagrant.defaults.nodes.keys.box
+  boot_timeout = $vagrant.defaults.config.boot_timeout
   size = options.key?(:size) ? options[:size] : $vagrant.defaults.nodes.size
   node.create(options[:name], options[:group], 
-  options[:environment], box, size)
+  options[:environment], box, size, boot_timeout)
 else
   puts opt_parser
 end

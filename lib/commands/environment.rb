@@ -28,7 +28,7 @@ when "activate"
   $logger.info($info.environment.activate % [environment, $environment.context_file])
   if !File.exist?(environment_path)
     $logger.error($errors.environment.path.notfound % environment_path)
-    exit
+    abort
   else
     File.open($environment.context_file,"w") do |file|
       file.write environment

@@ -27,6 +27,10 @@
     - "{{ ssh_keys_matched.results }}"
   loop_control:
     loop_var: ssh_obj
+  when: >
+    ssh_obj[1].files is defined and
+    ssh_obj[1].files is sequence and 
+    ssh_obj[1].files | length > 0    
 
 - name: ssh | stat public ssh key files
   find:
