@@ -13,13 +13,12 @@ module VenvProvision
 	    def run(node_object, node_set=nil, machine=nil)
 		  # Skip all provisionment except for ansible if all of the following conditions hold true:
 		  # - ansible controller mode is enabled
-		  # - vagrant was called using syntax: vagrant provision {{ ansiblesurrogate }} {{ targetnode }}
-    	  no_provision_except_ansible = [
+		  # - vagrant was called using syntax: vagrant provision {{ targetnode }} {{ ansiblesurrogate }}
+    	  called_multiple_machines = $node_subset.length > 1
+    	  provision_except_ansible = [
     	  	($ansible.mode == 'controller'), 
-    	  	(node_object['name'] == $ansible.surrogate), 
-    	  	$vagrant_args[0] == 'provision', 
-    	  	($vagrant_args[1] == $ansible.surrogate and $vagrant_args[-1] != $ansible.surrogate), 
-    	  	!$node_subset.nil?].all?
+    	  	called_multiple_machines, 
+    	  	($vagrant_args.last == $ansible.surrogate)].all?
 	      if node_object.key?("provisioners")
 	        node_object["provisioners"].each do |provisioner|
 	          if not provisioner.is_a?(Hash)
@@ -28,7 +27,7 @@ module VenvProvision
 	          end
 	          case
 	          when [provisioner.key?('local'),!provisioner['local'].nil?].all?
-	          	if !no_provision_except_ansible
+	          	if !provision_except_ansible
 		            if $debug 
 		            	Pry.rescue do
 		            		@invoke.local(node_object)              
@@ -38,7 +37,7 @@ module VenvProvision
 		            end
 	        	end
 	          when [provisioner.key?('shell'),!provisioner['shell'].nil?].all?
-	            if !no_provision_except_ansible
+	            if !provision_except_ansible
 		            if $debug 
 		            	Pry.rescue do
 		            		@invoke.shell(node_object, machine)
@@ -56,7 +55,7 @@ module VenvProvision
 	            	@invoke.ansible(node_object, provisioner['ansible'], node_set, machine)
 	            end	            
 	          when [provisioner.key?('puppet'),!provisioner['puppet'].nil?].all?
-	            if !no_provision_except_ansible
+	            if !provision_except_ansible
 		            if $debug 
 		            	Pry.rescue do
 			            	@invoke.puppet(node_object, machine)

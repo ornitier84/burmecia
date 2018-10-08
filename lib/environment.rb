@@ -183,6 +183,7 @@ class Nodes
         node_set += y
       end
       $target_all_machines = false
+      $node_set = node_set
       # Are we targeting a subset of machines?
       $node_subset = node_set.select { |k, v| ARGV.include?(k['name']) }
       # Ansible 'controller mode' logic

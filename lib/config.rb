@@ -28,8 +28,6 @@ $logger = Vagrant::UI::Colored.new
 # Initialize global variables
 $is_virtualbox = !$virtbox.nil? || [defined? VagrantPlugins::ProviderVirtualBox, $vagrant.provider_order.first == 'virtualbox'].all? ? true : false
 $is_kvm = !$kvm.nil? || [defined? VagrantPlugins::ProviderLibvirt, $vagrant.provider_order.first == 'libvirt'].all? ? true : false
-$plugin_disksize_available = defined? Vagrant::Disksize::Plugin
-$plugin_vagranthosts_available = defined? VagrantHosts::Plugin
 $pry_debugger_available = defined? Pry::rescue
 $provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
 # Create required paths

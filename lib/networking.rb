@@ -22,11 +22,10 @@ module VenvNetworking
           else
             machine.vm.network $vagrant.vm_network_default_mode, type: "dhcp"
           end
-
           # Add fqdns to /etc/hots for all defined hosts in node_set
-          if $plugin_vagranthosts_available
+          if defined? VagrantHosts::Plugin
             config.vm.provision :hosts do |provisioner|
-              node_set.each do |h|
+              $node_set.each do |h|
                 if h.key?('interfaces') and !h['interfaces'].nil?
                   h['interfaces'].each do |interface|
                     next if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all? and interface['exclude_from_hosts'] == true
