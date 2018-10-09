@@ -125,7 +125,7 @@ settings:
       adhoc: 
         files: lib/commands/*.rb
     defaults:
-      autostart: false
+      autostart: true
       config:
         boot_timeout: 300
       nodes:
