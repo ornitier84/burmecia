@@ -41,7 +41,7 @@ strings:
             Running ansible via %s
       status:
         header: |
-          Current machine states:
+          Current managed machine states:
           
     no_provisioners: |-
       No provisioners specified in node yaml for host %s
@@ -90,6 +90,12 @@ strings:
     provisioners:
       ansible:
         controller:
+          skipping: |-
+            Because the Ansible provisioner is in 'controller' mode, we
+            are skipping ansible provisionment.
+            You must call the provision action ensuring the ansible surrogate hostname
+            is specified last, as with:
+            vagrant provision %{machine} %{surrogate}          
           nodes:
             not_created: |-
               Ansible provisioner is in 'controller' mode and the node %{machine} is not yet created.
@@ -191,14 +197,6 @@ strings:
         failed: |-
           Local command execution failed with error: %s
       ansible:
-        controller:
-          args:
-            unsupported: |-
-              Ansible provisioner is in 'controller' mode.
-              You must call the provision action ensuring the ansible surrogate hostname
-              is specified first, as with:
-              vagrant provision %{surrogate} %{machine}
-              Skipping ansible provisionment
         surrogate:
           not_reachable: |-
             Windows platform detected. 

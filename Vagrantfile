@@ -56,19 +56,21 @@ def main
   ssh_settings = VenvSettings::SSH.new
   # Instantiate the vagrant machine config settings class
   machine_settings = VenvSettings::Config.new
+  # Warn us if we're calling provisionment and ansible is in 'controller' mode
+  if [ $ansible.mode == 'controller', $vagrant_args.first == 'provision', $vagrant_args.last != $ansible.surrogate].all?
+    $logger.warn($warnings.provisioners.ansible.controller.skipping % {machine: '{{ node_name }}', surrogate: $ansible.surrogate })
+  end
   # Process Virtual Machines
   Vagrant.configure($vagrant.api_version) do |config|
     node_set.each do |node_object|
         # Configure ssh settings
         ssh_settings.evaluate(node_object, config)
-        # Evaluate config.vm settings
         # Read node autostart option
         autostart_setting = [node_object.key?('autostart'),!node_object['autostart'].nil?].all? ? node_object['autostart'] : $vagrant.defaults.autostart
         # Define node
         config.vm.define node_object['name'], autostart: autostart_setting do |machine|
+          # Evaluate machine.vm settings
           machine_settings.evaluate(node_object, machine)
-          # machine.vm.hostname = node_object['name']
-          # machine.vm.box = node_object['config']['box']            
           if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
             node.down(node_object, machine) 
           elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
@@ -78,7 +80,7 @@ def main
     end
   end
   # Process managed/bare metal nodes
-  if $managed
+  if $ARGV.include?('--managed')
     # Print the status header if we're querying node status
     if ARGV.include? "status"
       $logger.info($info.managed.status.header)
