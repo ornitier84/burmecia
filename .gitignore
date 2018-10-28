@@ -29,6 +29,7 @@ var/
 
 # Packages/Binaries
 *.rpm.zip
+*.zip
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -148,5 +149,8 @@ $RECYCLE.BIN/
 
 ### Vagrant ###
 .vagrant/
+
+# Sublime Text 3
+sftp-config.json
 
 # End of https://www.gitignore.io/api/windows,osx,linux

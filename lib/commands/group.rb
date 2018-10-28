@@ -1,7 +1,17 @@
-# Call vagrant commands against specified node groups
-require 'open3'
-$no_provision = false
-group = VenvEnvironment::Groups.new
+# Manage vagrant machine groups
+
+# Import libraries
+require 'commands/lib/group.commands'
+require 'commands/lib/environment.commands'
+require 'environment'
+# Instantiate the vagrant commands group class
+group = VenvCommandsGroup::Commands.new
+# Instantiate the vagrant commands environment class
+env = VenvCommandsEnvironment::Commands.new
+# Instantiate the vagrant environment nodes class
+@nodes = VenvEnvironment::Nodes.new
+cli = VenvCommon::CLI.new
+
 options = {}
 opt_parser = OptionParser.new do |opt|
   opt.banner = "Usage: vagrant group ACTION <PARAMS> [OPTIONS]"
@@ -13,10 +23,10 @@ opt_parser = OptionParser.new do |opt|
   opt.separator  "Options"
   opt.on("-e","--environment ENVIRONMENT","specify the machine's environment context") do |environment|
     options[:environment] = environment
-  end                    
-  opt.on("-N","--no-provision","skip provisionment steps") do |no_provision|
+  end 
+  opt.on("-n","--no-provision","skip provisionment steps") do |no_provision|
     options[:no_provision] = no_provision
-  end           
+  end
   opt.on("-h","--help","help") do
     puts opt_parser
   end
@@ -28,16 +38,41 @@ opt_parser = OptionParser.new do |opt|
   opt.separator  ""          
 end
 opt_parser.parse!
+
+def get_machines(group_environment, machine_group)
+  # Generate the node set
+  machine_targets = []
+  node_set = @nodes.generate(group_environment)
+  node_set_filtered = node_set.select { |k, v| k['groups'].include?(machine_group) }
+  node_set_filtered.each { |n| machine_targets.push(n['name']) }
+  return machine_targets
+end
+
+# Quit if environment not specified
+exit unless options.dig(:environment)
+
+# Gather variables
+machine_group = ARGV[2]
+group_environment = options[:environment]
+
 case
-when [ARGV[1] == "create",
-options.key?(:environment)].all?
-  node_group = ARGV[2]
-  group.create(node_group, options[:environment])
-when [ARGV[1] == "up", options.key?(:environment)].all?
-  node_group = ARGV[2]
-  no_provision = options.key?(:no_provision) ? '--no-provision' : ''
-  puts "Bringing up node group #{node_group} under environment #{options[:environment]}!"
-  Vagrant::Util::Subprocess.execute(VenvCommon::CLI.vagrant_cmd, 'environment', 'activate', options[:environment])
+when ARGV[1] == "create"
+  $logger.info($info.commands.group.create % {group:machine_group, environment: group_environment})
+  group.create(machine_group, options[:environment])
+when ARGV[1] == "destroy"
+  machine_targets = get_machines(group_environment, machine_group)
+  env.activate(group_environment)
+  cli.run_cmd("vagrant destroy #{machine_targets.join(' ')} --force")
+when ARGV[1] == "status"
+  $logger.info($info.commands.group.status % {group:machine_group, environment: group_environment})
+  machine_targets = get_machines(group_environment, machine_group)
+  env.activate(group_environment)
+  cli.run_cmd("vagrant status #{machine_targets.join(' ')}")  
+when ARGV[1] == "up"
+  $logger.info($info.commands.group.up % {group:machine_group, environment: group_environment})
+  env.activate(group_environment)
+  machine_targets = get_machines(group_environment, machine_group)
+  cli.run_cmd("vagrant up #{machine_targets.join(' ')}")
 else
   puts opt_parser
-end  
+end

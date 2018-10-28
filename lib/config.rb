@@ -4,10 +4,8 @@ require 'log4r/config'
 require 'vagrant/ui'
 require 'yaml'
 # Load custom modules
-require_relative 'misc'
-require_relative 'formatter'
-# Instantiate the pretty_print text formatter handler
-@pretty_print = VenvFormatter::PrettyPrint.new
+require 'misc'
+require 'formatter'
 # Load main config
 vagrant_config_file = File.expand_path('../../etc/config.yaml', __FILE__)
 vagrant_locale_file = File.expand_path('../../etc/locales/en.yaml', __FILE__)
@@ -23,14 +21,18 @@ $debug = [
 	ENV['DEBUG'], ENV['debug'], 
 	$logging.debug, 
 	File.exist?($semaphores.debug)
-].any?
+	].any?
+# Instantiate the logger method
 $logger = Vagrant::UI::Colored.new
 # Initialize global variables
-$is_virtualbox = !$virtbox.nil? || [defined? VagrantPlugins::ProviderVirtualBox, $vagrant.provider_order.first == 'virtualbox'].all? ? true : false
-$is_kvm = !$kvm.nil? || [defined? VagrantPlugins::ProviderLibvirt, $vagrant.provider_order.first == 'libvirt'].all? ? true : false
-$pry_debugger_available = defined? Pry::rescue
+# Managed nodes
+$managed_node_set = []
+$managed = true if ARGV.index{ |s| s.include?("--managed-targets=") }
+# Hypervisors
+$is_virtualbox = defined?('VagrantPlugins::ProviderProviderVirtualBox') ? true : false
+$is_kvm = defined?('VagrantPlugins::ProviderLibvirt') ? true : false
 $provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
-# Create required paths
+# Create required file paths
 paths = [$logging.logs_dir]
 paths.each do |directory|
   begin 
@@ -39,7 +41,6 @@ paths.each do |directory|
     $logger.error($errors.fso.operations.failure % e)
   end
 end
-# Vagrant
 ## Required plugins
 @required_plugins = []
 missing_plugins = []
@@ -60,18 +61,4 @@ if not @required_plugins.empty?
 		$logger.warn($warnings.missing_plugin_install % p)
 	  end
 	end
-end
-
-# Load vagrant plugins
-$project.requirements.plugins.mandatory.each do |plugin|
-	
-	begin
-		require "#{plugin}" 
-	rescue Exception => err
-	  if @debug
-	    STDERR.puts "Exception: #{err.message}"
-	    STDERR.puts "Backtrace:\n#{@pretty_print.backtrace(err)}\n"  
-	  end
-	end
-
 end

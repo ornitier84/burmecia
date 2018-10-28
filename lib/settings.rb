@@ -4,7 +4,7 @@ module VenvSettings
 	
 		def evaluate(node_object, machine)
 			# per-machine config settings
-			if node_object.key?("config") and !node_object['config'].nil?
+			if node_object.dig("config")
 					node_object['config'].each_pair do |item, value|
 					machine.vm.send("#{item}=", value)
 				end
@@ -28,11 +28,11 @@ module VenvSettings
 	class SSH
 
 		def evaluate(node_object, config)
-			if ARGV[-2] == 'ssh' and ARGV[-1] != node_object['name']
+			if ARGV[-2] == 'ssh' and ARGV.last != node_object['name']
 				return false
 			end
 			# per-machine ssh settings
-			if node_object.key?("ssh") and !node_object['ssh'].nil?
+			if node_object.dig("ssh")
 					node_object['ssh'].each_pair do |item, value|
 					config.ssh.send("#{item}=", value)
 				end
@@ -40,7 +40,7 @@ module VenvSettings
 			# global ssh settings
 			$vagrant.ssh.each_pair do |item, value|
 				if !value.nil?
-					if node_object.key?("ssh") and !node_object['ssh'].nil?
+					if node_object.dig("ssh")
 						if !node_object["ssh"].key?(item.to_s)
 							config.ssh.send("#{item}=", value)
 						end

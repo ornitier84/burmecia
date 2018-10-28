@@ -7,7 +7,7 @@ module VenvProvisionersAnsible
     def eval_ansible(node_object, ansible, local: false)
 
       # per-machine ansible options
-      if node_object.key?("ansible") and !node_object['ansible'].nil?
+      if node_object.dig("ansible")
           node_object['ansible'].each_pair do |item, value|
           ansible.send("#{item}=", value)
         end
@@ -18,7 +18,7 @@ module VenvProvisionersAnsible
         if $ansible.options.local.respond_to?(:each_pair)
           $ansible.options.local.each_pair do |item, value|
             if !value.nil?
-              if node_object.key?("ansible") and !node_object['ansible'].nil?
+              if node_object.dig("ansible")
                 if !node_object["ansible"].key?(item.to_s)
                   ansible.send("#{item}=", value)
                 end
@@ -34,7 +34,7 @@ module VenvProvisionersAnsible
       if $ansible.options.global.respond_to?(:each_pair)
         $ansible.options.global.each_pair do |item, value|
           if !value.nil?
-            if node_object.key?("ansible") and !node_object['ansible'].nil?
+            if node_object.dig("ansible")
               if !node_object["ansible"].key?(item.to_s)
                 ansible.send("#{item}=", value)
               end
@@ -70,7 +70,7 @@ module VenvProvisionersAnsible
         playbook_content += "- #{$ansible.default_include_statement}: #{item['playbook']} hosts=#{item['host']}\n"
       end
       playbook_file = "#{@sync_dir}/#{$ansible.paths.playbooks.set}"
-      $logger.info "Writing #{playbook_file}" if $debug
+      $logger.info("Writing #{playbook_file}") if $debug
       begin
         File.open(playbook_file, "w") do |file|
           file.write playbook_content
@@ -94,8 +94,7 @@ module VenvProvisionersAnsible
       create_var_folder(vagrant_ansible_var_folder_real_path)
 
       # Write the main playbook
-    ######Check for playbook specification#BEGIN
-      if provisioner.key?("playbooks") and !provisioner['playbooks'].nil?
+      if provisioner.dig("playbooks")
           playbooks = provisioner['playbooks']
           playbook_list = []
           # Read playbook specification 
@@ -104,14 +103,14 @@ module VenvProvisionersAnsible
           when Array
             playbooks.each do |playbook_item|
               if playbook_item.respond_to?(:values)
-                playbook_path = playbook_item.values[0]
+                playbook_path = playbook_item.values.first
               else
                 playbook_path = playbook_item
               end
               playbook_path = playbook_path.start_with?('/') ? 
               playbook_path : "#{sync_dir}/#{$ansible_basedir}/playbooks/#{playbook_path}"
               if playbook_item.respond_to?(:keys)
-                playbook_option = {playbook_item.keys[0] => playbook_path} 
+                playbook_option = { playbook_item.keys.first => playbook_path }
               else
                 playbook_option = { $ansible.default_include_statement => playbook_path }
               end
@@ -119,19 +118,19 @@ module VenvProvisionersAnsible
             end
           when String
               playbook_path = playbooks.start_with?('/') ? 
-              playbooks : "#{sync_dir}/#{$ansible_basedir}/#{playbooks}"                    
-            playbook_list = [{$ansible.default_include_statement => playbook_path}]
+                playbooks : "#{sync_dir}/#{$ansible_basedir}/#{playbooks}"                    
+            playbook_list = [{ $ansible.default_include_statement => playbook_path }]
           else
             playbook_list = []
           end
           ######Parse Playbooks#END
           scratch_playbook = _write(host, provisioner)
-          playbook_list.push({$ansible.default_include_statement => scratch_playbook})
+          playbook_list.push({ $ansible.default_include_statement => scratch_playbook })
           playbook_obj = playbook_list
         else
           # Write the scratch playbook
           scratch_playbook = _write(host, provisioner)
-          playbook_obj = [{$ansible.default_include_statement => scratch_playbook}]
+          playbook_obj = [{ $ansible.default_include_statement => scratch_playbook }]
       end 
     ######Check for playbook specification#END
       case playbook_obj
@@ -172,7 +171,7 @@ module VenvProvisionersAnsible
       # Define the main playbook from the vm perspective
       vagrant_ansible_var_folder = "#{sync_dir}/#{vagrant_ansible_var_folder_real_path}"
       
-      $logger.info "#{vagrant_ansible_var_folder}/main.yaml" if @debug
+      $logger.info("#{vagrant_ansible_var_folder}/main.yaml") if @debug
       
       return { 
         "playbook" => "#{vagrant_ansible_var_folder}/main.yaml",
@@ -209,12 +208,12 @@ module VenvProvisionersAnsible
       if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?
         case ansible_hash['vars']
         when Hash
-          vars_hash = {'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
+          vars_hash = { 'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
         when Array
           default_vars_hash = { 'vars' =>
             [ default_vars_hash ]
           }
-          vars_hash = {'vars' => default_vars_hash['vars'].concat(ansible_hash['vars'])}
+          vars_hash = { 'vars' => default_vars_hash['vars'].concat(ansible_hash['vars']) }
         end
         ansible_hash.delete("vars")
       else
@@ -228,7 +227,7 @@ module VenvProvisionersAnsible
       when Hash
         merged_ansible_hash = vars_hash.is_a?(Hash) ? 
           vars_hash.merge!(ansible_hash) : ansible_hash
-        merged_playbook_hash = [ { 'hosts' => host['name'] }.merge!(merged_ansible_hash) ]
+        merged_playbook_hash = [{ 'hosts' => host['name'] }.merge!(merged_ansible_hash)]
         # Define the scratch playbook from the host perspective
         playbook_file = "#{vagrant_ansible_var_folder_real_path}/#{$ansible.scratch.playbook_name}"
         File.open(playbook_file,"w") do |file|

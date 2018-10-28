@@ -1,17 +1,17 @@
 ---
-- name: '<%= @node_name %>'
+- name: '<%= @machine_name %>'
   config:
-    box: '<%= @node_box %>'
-    hostname: '<%= @node_name %>'
+    box: '<%= @machine_box %>'
+    hostname: '<%= @machine_name %>'
     boot_timeout: <%= @boot_timeout %>
   desktop: <%= $vagrant.defaults.nodes.keys.desktop %>
   provision: <%= $vagrant.defaults.nodes.keys.provision %>
   provider:
     virtualbox:
       modifyvm:
-        # name: '<%= @node_name %>'
+        name: '<%= @machine_name %>'
         natdnshostresolver1: <%= $vagrant.defaults.nodes.keys.natdnshostresolver1 %>
-        memory: <%= $environment.sizing[@node_size].memory %>
-        cpus: <%= $environment.sizing[@node_size].cpus %>
+        memory: <%= $environment.sizing[@machine_size].memory %>
+        cpus: <%= $environment.sizing[@machine_size].cpus %>
       setextradata:
         VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: <%= $vagrant.defaults.nodes.keys.VBoxInternal2.SharedFoldersEnableSymlinksCreate.v_root %>    

@@ -4,37 +4,27 @@ module VenvMachine
 
 		def configure(node_object, machine)
 			
-			if node_object.key?("synced_folder") and !node_object['synced_folder'].nil?
+			if node_object.dig("synced_folder")
 			    node_object['synced_folder'].each do |item, folder|
-			      if !folder['source'].nil? and !folder['target'].nil?
-			      	if !File.exist?(folder['source'])
-			      		next
-			      	end
-			        type = !folder['type'].nil? ? folder['type'] : $vagrant.synced_folder.defaults.type
-			        create = !folder['create'].nil? ? folder['create'] : $vagrant.synced_folder.defaults.create
-			        disabled = !folder['disabled'].nil? ? folder['disabled'] : $vagrant.synced_folder.defaults.disabled
-
+			      if folder.dig('source')
+			      	next if !File.exist?(folder['source'])
+			        type = folder.dig('type') ? folder['type'] : $vagrant.synced_folder.defaults.type
+			        create = folder.dig('create') ? folder['create'] : $vagrant.synced_folder.defaults.create
+			        disabled = folder.dig('disabled') ? folder['disabled'] : $vagrant.synced_folder.defaults.disabled
 			        # backwards compat: check if using nfs
-			        if !folder['nfs'].nil? and folder['nfs']
-			          type = 'nfs'
-			        end
-
 			        # NFS
-			        if type == 'nfs'
+			        if $vagrant.synced_folder.defaults.type == 'nfs'
 			          nfs_udp = !folder['nfs_udp'].nil? ? folder['nfs_udp'] : $vagrant.synced_folder.defaults.nfs.udp
 			          nfs_version = !folder['nfs_version'].nil? ? folder['nfs_version'] : $vagrant.synced_folder.defaults.nfs.version
-			          linux_nfs_options = !folder['linux__nfs_options'].nil? ? folder['linux__nfs_options'] : $vagrant.synced_folder.defaults.nfs.linux.nfs.options
-
+			          linux_nfs_options = folder.dig('linux__nfs_options') ? folder['linux__nfs_options'] : $vagrant.synced_folder.defaults.nfs.linux.nfs.options
 			          machine.vm.synced_folder folder['source'], folder['target'], 
 			            type: type, 
 			            nfs_udp: nfs_udp
-			        
 			        # RSYNC
 			        elsif type == 'rsync'
 			          rsync_args = !folder['rsync__args'].nil? ? folder['rsync__args'] : $vagrant.synced_folder.defaults.rsync.args
 			          rsync_auto = !folder['rsync__auto'].nil? ? folder['rsync__auto'] : $vagrant.synced_folder.defaults.rsync.auto
 			          rsync_exclude = !folder['rsync__exclude'].nil? ? folder['rsync__exclude'] : $vagrant.synced_folder.defaults.rsync.auto
-
 			          machine.vm.synced_folder folder['source'], folder['target'], 
 			            type: type, 
 			            create: create,
@@ -50,11 +40,10 @@ module VenvMachine
 			            disabled: disabled,
 			            :mount_options => mount_options
 			        # No type found, use old method
-			        else
+			        elsif type == 'generic'
 			          owner = !folder['owner'].nil? ? folder['owner'] : ''
 			          group = !folder['group'].nil? ? folder['group'] : ''
 			          mount_options = !folder['mount_options'].nil? ? folder['mount_options'] : $vagrant.synced_folder.defaults.mount_options
-
 			          machine.vm.synced_folder folder['source'], folder['target'], 
 			            type: type,
 			            create: create,
@@ -73,9 +62,9 @@ module VenvMachine
 	class Controls
 
 		def halt(node_object, machine)
-		  if ARGV.include? "halt"
+		  if ARGV.include?("halt")
 		    $logger.info($info.boot_halt % node_object['name'])
-		  elsif ARGV.include? "destroy"
+		  elsif ARGV.include?("destroy")
 		    $logger.info($info.boot_destroy % node_object['name'])
 		  end
 		end
@@ -85,13 +74,13 @@ module VenvMachine
 	class Hardware
 
 		def initialize
-			require_relative 'providers'
+			require 'providers'
 			@virtualbox = VenvProviders::VirtualBox.new
 			@libvirt = VenvProviders::LibVirt.new
 		end
 
 		def get_local_resources(platform, resource)
-		  commands = {
+		  platform_commands = {
 		    osx: {
 		      vcpu: "sysctl -n hw.ncpu",
 		      vmem: "sysctl -n hw.memsize | awk '{print $0/1073741824}'"
@@ -108,11 +97,11 @@ module VenvMachine
 		      }
 		  }
 		  # powershell may not be available on Windows XP and Vista, so wrap this in a rescue block
-		  cmd = commands[platform.to_sym][resource.to_sym]
+		  platform_command = platform_commands[platform.to_sym][resource.to_sym]
 		  begin 
-		    res = `#{cmd}`.chomp()
+		    res = `#{platform_command}`.chomp()
 		  rescue Exception => e
-		    $logger.error($errors.exec % cmd)
+		    $logger.error($errors.exec % platform_command)
 		    $logger.error($errors.res % resource)
 		    $logger.error("Error was #{e}")
 		    return nil  
@@ -135,7 +124,7 @@ module VenvMachine
 		    when $platform.is_osx
 		      _os = 'osx'
 		  end
-	      if node_object.key?("provider") and !node_object['provider'].nil?
+	      if node_object.dig("provider")
 	          begin
 		          # Loop through providers
 		          node_object['provider'].each do |prov, options|

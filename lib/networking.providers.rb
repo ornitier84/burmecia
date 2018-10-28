@@ -33,10 +33,10 @@ module VenvNetworkingProviders
             @ports = VagrantPorts.new
         end        
 
-        def configure(host, machine, network_adapters)
+        def configure(host, config, machine, network_adapters)
           case network_adapters
           when String || Hash
-            $logger.info "Your node's networking YAML structure is not yet implemented #{network_adapters.class} ... skipping"
+            $logger.info("Your node's networking YAML structure is not yet implemented #{network_adapters.class} ... skipping")
           when Array
             # Iterate through networks as per settings in machines.yml
             network_adapters.each do |interface|
@@ -44,13 +44,13 @@ module VenvNetworkingProviders
                 networking_method = interface['method'] || $vagrant.vm_network_default_mode
                 case 
                   when ip == 'dhcp'
-                    machine.vm.network interface['method'], type: 'dhcp'
+                    config.vm.network interface['method'], type: 'dhcp'
                     @ports.forward(host, machine, network_adapters)
                   when networking_method.include?('public')
                     bridged_interfaces = interface['bridged_adapters'] || []
                     bridged_interfaces.each do |bi|
                       bi.each do |h,g|
-                        machine.vm.network :public_network, ip: ip,
+                        config.vm.network :public_network, ip: ip,
                         :dev => h,
                         :bridge => g,
                         :mode => "bridge",
@@ -58,12 +58,12 @@ module VenvNetworkingProviders
                       end
                     end             
                   else
-                    machine.vm.network interface['method'], ip: ip
+                    config.vm.network interface['method'], ip: ip
                     @ports.forward(host, machine, network_adapters)
                 end     
             end
           else
-            machine.vm.network $vagrant.vm_network_default_mode, type: "dhcp"
+            config.vm.network $vagrant.vm_network_default_mode, type: "dhcp"
           end
         end
 

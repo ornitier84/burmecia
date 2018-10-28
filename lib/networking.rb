@@ -5,19 +5,18 @@ module VenvNetworking
     def configure(config, node_set, host, machine)
 
           # Imports
-          require_relative 'networking.providers'
+          require 'networking.providers'
 
           # Configure VM network settings
-          network_adapters = host['interfaces'] || nil
-          if network_adapters
+          if host.dig('interfaces')
             if $is_kvm
               # Instantiate the vagrant network/libvirt class 
               vlibvirt = VenvNetworkingProviders::VagrantLibvirt.new    
-              vlibvirt.configure(host, machine, network_adapters)
+              vlibvirt.configure(host, config, machine, host['interfaces'])
             else
               # Instantiate the vagrant network/virtualbox class 
               vvirtualbox = VenvNetworkingProviders::VagrantVirtualBox.new    
-              vvirtualbox.configure(host, machine, network_adapters)
+              vvirtualbox.configure(host, machine, host['interfaces'])
             end
           else
             machine.vm.network $vagrant.vm_network_default_mode, type: "dhcp"
@@ -26,7 +25,7 @@ module VenvNetworking
           if defined? VagrantHosts::Plugin
             config.vm.provision :hosts do |provisioner|
               $node_set.each do |h|
-                if h.key?('interfaces') and !h['interfaces'].nil?
+                if h.dig('interfaces')
                   h['interfaces'].each do |interface|
                     next if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all? and interface['exclude_from_hosts'] == true
                     $logger.info($info.provisioners.hosts % [interface['ip'], h['name'],host['name']]) if $debug 
@@ -40,8 +39,6 @@ module VenvNetworking
     end
 
   end
-
-
 
   class TCP
     

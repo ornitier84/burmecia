@@ -1,7 +1,10 @@
-require_relative 'lib/common'
-require_relative 'lib/config'
-require_relative 'lib/environment'
-require_relative 'lib/misc'
+# Append to load path
+lib = File.expand_path("../lib", __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'common'
+require 'config'
+require 'environment'
+require 'misc'
 
 # Initialize config loader
 config = YAMLTasks.new

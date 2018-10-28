@@ -1,6 +1,7 @@
 module VenvFormatter
 
 	class PrettyPrint
+    
 		# Generate a backtrace string for given exception.
 		# Generated string is a series of lines, each beginning with a tab and "at ".
 		def backtrace(exception)
@@ -11,10 +12,13 @@ module VenvFormatter
 		def exception(exception)
 		  "#{exception.message}\n#{pretty_backtrace(exception)}"
 		end
+
 	end
+
 end
 
 class String
+
   def black;          "\e[30m#{self}\e[0m" end
   def red;            "\e[31m#{self}\e[0m" end
   def green;          "\e[32m#{self}\e[0m" end
@@ -38,4 +42,5 @@ class String
   def underline;      "\e[4m#{self}\e[24m" end
   def blink;          "\e[5m#{self}\e[25m" end
   def reverse_color;  "\e[7m#{self}\e[27m" end
+
 end

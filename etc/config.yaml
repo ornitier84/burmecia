@@ -77,8 +77,14 @@ settings:
   semaphores:
     debug: ".vagrant/.debug"
   managed_nodes:
-    required_keys:
-      - ssh
+    posix:
+      required_key: ssh
+      required_properties:
+        - port
+    windows:
+      required_key: winrm
+      required_properties:
+        - port
   # misc
   misc:
     patterns:
@@ -122,6 +128,7 @@ settings:
     api_version: 2
     require_version: ">= 1.7.2"
     commands:
+      noexec: <%= Dir.glob("lib/commands/*.rb").map { |file| File.basename(file, ".rb") } %>
       adhoc: 
         files: lib/commands/*.rb
     defaults:

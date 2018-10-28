@@ -14,6 +14,13 @@ strings:
     boot_completed: |-
       Machine booted and ready!
     commands:
+      group:
+        create: |-
+          Creating group %{group} under environment %{environment}
+        status: |-
+          Reporting status for node group %{group} under environment %{environment}
+        up: |-
+          Bringing up node group %{group} under environment %{environment}!
       node:
         create: |-
           Writing node definition file %s
@@ -34,6 +41,10 @@ strings:
       file:
         write: |-
           Writing inventory file %s
+    machine:
+      linked: 
+        up: |-
+          Processing linked machines for %{machine}
     managed:
       provisioners:
         ansible:
@@ -87,6 +98,11 @@ strings:
       You are missing at least one required vagrant plugin, install with:
     missing_plugin_install: |-
       rake init or vagrant plugin install %s
+    machine:
+      linked:
+        yaml_syntax: |-
+          Skipped processing linked machines for %{machine} --
+          Linked machines must be a yaml list object
     provisioners:
       ansible:
         controller:
@@ -159,12 +175,9 @@ strings:
         Error was %s
       path:
         notfound: |-
-          The environment path you specified (%s) was not found.
-          Because of this failure in node definitions, 
-          Your nodes will not be listed and available for interaction.
-          Review the contents of the environment the environment context file: $environment.context_file
-          Activate an existing environment to clear this error, e.g.
-          vagrant activate contoso
+          Not activating %{env}, as the environment path %{envp} was not found.
+          Activate an existing environment instead, e.g.
+          vagrant activate %{denv}
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check
@@ -174,7 +187,6 @@ strings:
         you simply forgot to include a box specification.
         Consult the 'Usage' section in the README or review the node definition template 
         Under the 'examples' directory
-    machine:
       provider:
         syntax: |-
           Encountered an error during initialization of provider options, error was %s

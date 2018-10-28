@@ -1,4 +1,10 @@
-# Specifies environment context for vagrant operations
+# Sets environment context for vagrant operations
+
+# Import libraries
+require 'commands/lib/environment.commands'
+# Instantiate the vagrant commands environment class
+env = VenvCommandsEnvironment::Commands.new
+
 environment_context = "all";
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -21,22 +27,10 @@ end
 opt_parser.parse!
 case ARGV[1]
 when "activate"
-  environment = ARGV[-1]
-  # Get the environment path
-  environment_path = environment == 'all' ?
-  $environment.basedir : "#{$environment.basedir}/#{environment}"
-  $logger.info($info.environment.activate % [environment, $environment.context_file])
-  if !File.exist?(environment_path)
-    $logger.error($errors.environment.path.notfound % environment_path)
-    abort
-  else
-    File.open($environment.context_file,"w") do |file|
-      file.write environment
-    end
-  end
-  $logger.info($info.completion.done)
+  environment = ARGV.last
+  env.activate(environment)
 when "create"
-  environment_context = ARGV[-1]
+  environment_context = ARGV.last
   environment_folder = "#{$environment.basedir}/#{environment_context}"
   if File.exist?(environment_folder)
     abort "Abort. Existing environment folder found: #{environment_folder}"
@@ -57,7 +51,7 @@ when "list"
   }
 when "remove"
   prompt = VenvCommon::Prompt.new
-  environment_context = ARGV[-1]
+  environment_context = ARGV.last
   environment_folder = "#{$environment.basedir}/#{environment_context}"
   unless options.key?(:force)
     abort("aborted!") if prompt.ask("Are you sure you want to remove and delete #{environment_folder}?", ['y', 'n']) == 'n'

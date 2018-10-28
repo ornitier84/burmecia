@@ -48,7 +48,7 @@ module VenvCommon
     	#
     	# Launch subprocess
     	#
-		Open3.popen3(cmd) do |stdin, stdout, stderr|
+		Open3.popen3(env, cmd) do |stdin, stdout, stderr|
 			stdin.close
 			readers = [stdout, stderr]
 			while readers.any?
@@ -99,8 +99,9 @@ module VenvCommon
     def ssh_singleton(node_object, args='')
         #TODO Dedupe this block
         if $managed and node_object['name'] != $ansible.surrogate
+        	ssh_options =
         	if node_object['ssh'].key?('extra_args')
-				ssh_options = node_object['ssh']['extra_args'].map { |k| "-o #{k}" }.join (' ')        		
+				node_object['ssh']['extra_args'].map { |k| "-o #{k}" }.join (' ')
 	        else
 	        	ssh_options = "-o ''"
 	        end
@@ -114,7 +115,7 @@ module VenvCommon
 	      	'" # simulate carriage return # TODO use something more elegant
 	        ].join(' ')
       	    cmd = "#{$project.ssh.path} #{ssh_args} '#{args}'"
-      	    if @debug
+      	    if $debug
   	    		$logger.info($info.singleton.ssh.command % cmd)
       	    end		
 	      	begin

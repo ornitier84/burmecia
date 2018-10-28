@@ -1,4 +1,9 @@
-# Sets environment context for writing inventory yaml file relevant to specified environment
+# Manage project
+
+require 'common'
+require 'misc'
+cli = VenvCommon::CLI.new
+
 options = {}
 opt_parser = OptionParser.new do |opt|
   opt.banner = "Usage: vagrant project ACTION ENVIRONMENT"
@@ -12,9 +17,17 @@ opt_parser = OptionParser.new do |opt|
   end
 end
 opt_parser.parse!
+
+def assert_execution(condition)
+  if (condition)
+    puts "OK"
+  else
+    puts "FAILED"
+  end
+end
+
 case ARGV[1]
   when "setup"
-    require File.expand_path("../lib/misc", __FILE__)
     # Load main config
     config = YAMLTasks.new
     config.parse('etc/config.yaml', 'settings') 
@@ -38,6 +51,12 @@ case ARGV[1]
         # puts process.stderr if process.stderr        
       end
     end     
+  when "shutdown"
+    # Shutdown and (if applicable) delete all machines in current environment
+    prompt = VenvCommon::Prompt.new
+    abort("Aborted!") if prompt.ask("Are you sure you want to shutdown and delete all of your defined machine?", ['y', 'n']) == 'n'
+    cmd = "vagrant destroy --force"
+    cli.run_cmd(cmd)    
   when "test"
     ## "Run tests"
     puts "Running vagrant tests ..."
@@ -50,7 +69,7 @@ case ARGV[1]
     puts "Testing environment activate"
     system("vagrant environment activate dummy-#{timestamp}")
     puts "Testing node create"
-    system("vagrant node create -e dummy-#{timestamp} -n dummy-#{timestamp} -g dummy")
+    system("vagrant machine create -e dummy-#{timestamp} -n dummy-#{timestamp} -g dummy")
     puts "Testing vagrant inventory create"
     system("vagrant inventory create dummy-#{timestamp}")
     puts "Testing vagrant status"

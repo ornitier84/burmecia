@@ -3,8 +3,8 @@ module VenvProvisioners
 	class Provisioner
 
 		def initialize
-			require_relative 'provisioners.ansible'
-			require_relative 'common'			
+			require 'provisioners.ansible'
+			require 'common'			
 			@node = VenvCommon::CLI.new
 			@ansible_settings = VenvProvisionersAnsible::Settings.new
 			@playbook = VenvProvisionersAnsible::Playbook.new
@@ -14,7 +14,7 @@ module VenvProvisioners
 			#####
 			# Determine the ansible provisioner
 			ansible_provisioner = $platform.is_windows ? "ansible_local" : "ansible"
-			if provisioner.key?("inventory") and !provisioner['inventory'].nil?
+			if provisioner.dig("inventory")
 				if $platform.is_windows
 					@inventory = provisioner['inventory'].start_with?('/') ?
 					provisioner['inventory'] :
@@ -34,6 +34,9 @@ module VenvProvisioners
 			if controller_mode
 				#####
 				if node_object['name'] == $ansible.surrogate
+					if $managed and !$managed_node_set.empty?
+						$node_subset += $managed_node_set
+					end
 					if $node_subset.length > 1
 						_node_subset = $node_subset.select { |k, v| k['name'] != $ansible.surrogate }
 					else
@@ -57,7 +60,7 @@ module VenvProvisioners
 							ansible.limit = "all"
 							ansible.playbook = @ansible_playbook
 							ansible.inventory_path = @inventory
-							if $pry_debugger_available and $debug
+							if defined? Pry::rescue and $debug
 								Pry.rescue do
 									@ansible_settings.eval_ansible(node_object, ansible, local: true)
 								end
@@ -75,7 +78,7 @@ module VenvProvisioners
 					  ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
 					  ansible.inventory_path = @inventory
 					  ansible.groups = @group_set if @group_set
-					  if $pry_debugger_available and $debug
+					  if defined? Pry::rescue and $debug
 						  Pry.rescue do
 						  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
 						  end
@@ -92,7 +95,7 @@ module VenvProvisioners
 				  ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
 				  ansible.inventory_path = @inventory
 				  ansible.groups = @group_set if @group_set
-				  if $pry_debugger_available and $debug
+				  if defined? Pry::rescue and $debug
 					  Pry.rescue do
 					  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
 					  end
@@ -109,7 +112,11 @@ module VenvProvisioners
 			require 'open3'
 			# Provisioning configuration for commands executed in the host context
 			is_invoked = ["up", "provision"].any? { |arg| ARGV.include? arg }
-			env_hash = node_object.select { |k| $environment.node.provisioners.env_hash.include?(k) }
+			unless $managed_nodes
+				env_hash = node_object.select { |k| $environment.node.provisioners.env_hash.include?(k) }
+			else
+				env_hash = {}
+			end
 			if node_object.key?('provisioners') and !node_object['provisioners'].nil?
 				node_object['provisioners'].each do |provisioner|
 					provisioner_name = provisioner.keys.first()
