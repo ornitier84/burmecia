@@ -3,6 +3,11 @@ strings:
 #-------------------------------------------------------------------------------
 # Translations for exception classes
 #-------------------------------------------------------------------------------
+  debugging:
+    commands:
+      group:
+        up: |-
+          Machine targets for group %{group} under environment %{environment}: %{machines}
   info:
     boot:
       up: |-

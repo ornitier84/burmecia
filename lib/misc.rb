@@ -51,9 +51,15 @@ class DeepOpenStruct < OpenStruct
 end
 
 class Hash
+
   def to_o
     JSON.parse to_json, object_class: DeepOpenStruct
   end
+
+  def deep_merge(second)
+      merger = proc { |key, v1, v2| Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2 }
+      self.merge(second, &merger)
+  end   
 
 end
 
@@ -76,9 +82,25 @@ class YAMLTasks
 		yaml_config[toplevelkey].each do |c,s|
 			if yaml_config[toplevelkey][c].is_a?(Hash)
 				if eval "defined?($#{c})"
-					# Incoming Hash
-					eval "$#{c} = yaml_config[toplevelkey][c].merge!($#{c}.to_h) {|k, o, n| n}"
-					eval "$#{c} = $#{c}.to_o"
+          eval "@_defaults = $#{c}.to_h"
+          # Merge incoming options, keeping new values
+          eval "@_options = $#{c}.to_h.deep_merge(yaml_config[toplevelkey][c]) { |key, old, new | new }"
+          # Convert all options keys to symbols where possible
+					eval "@_options = @_options.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}"
+          # Define new options
+          eval "@new_options = @_options.deep_merge(@_defaults){ |key, option, default| 
+            option
+          }"
+          # Define merged options
+          eval "@merged_options = @_options.merge(@_defaults) { |key, option, default| 
+          if option.respond_to?('merge') and option.is_a?(Hash)
+            # Merge in nested hashes
+            default.deep_merge(option.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo})
+          else
+            option
+          end
+          }.to_o"
+          eval "$#{c} = @merged_options"
 				else
 					eval "$#{c} = yaml_config[toplevelkey][c].to_o"
 				end
