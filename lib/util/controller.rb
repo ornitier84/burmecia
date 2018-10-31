@@ -1,46 +1,13 @@
-module VenvCommon
+module VenvUtilController
 
-	class Prompt
-
-		def ask(message, valid_options)
-		  if valid_options
-		    answer = get_stdin("#{message} #{valid_options.to_s.gsub(/"/, '').gsub(/, /,'/')} ") while !valid_options.include?(answer)
-		  else
-		    answer = get_stdin(message)
-		  end
-		  answer
-		end
-
-		def get_stdin(message)
-		  print message
-		  STDIN.gets.chomp
-		end		
-
-	end
-
-	class String
-
-		def to_bool(s)
-		    case s
-		    when /^(yes|true|on|1)$/i
-		      true
-		    when /^(no|false|off|0)$/i
-		      false
-		    else
-		      return s
-		  	end
-		end
-		
-	end
-
-	class CLI
+	class Controller
 
 	def initialize
 	  require 'open3'
       @ssh_cmd = Vagrant::Util::Which.which("ssh")
 	end
 
-	def CLI.vagrant_cmd
+	def Controller.vagrant_cmd
       @@vagrant_cmd = Vagrant::Util::Which.which("vagrant")
 	end
 
@@ -70,7 +37,7 @@ module VenvCommon
 	end
 
     def status_singleton(node_object, no_provision: false)
-		r = Vagrant::Util::Subprocess.execute(CLI.vagrant_cmd, "status", "#{node_object['name']}")
+		r = Vagrant::Util::Subprocess.execute(Controller.vagrant_cmd, "status", "#{node_object['name']}")
 		stdout = r.stdout.strip!
 		if stdout.match(/#{node_object['name']}#{$misc.patterns.node.up}/)
 			return :reachable
@@ -82,9 +49,9 @@ module VenvCommon
     def up_singleton(node_object, no_provision: false)
 		$logger.info($info.boot.up % node_object['name'])
 		if no_provision
-			cmd = "#{CLI.vagrant_cmd} up #{node_object['name']} --no-provision"
+			cmd = "#{Controller.vagrant_cmd} up #{node_object['name']} --no-provision"
 		else
-			cmd = "#{CLI.vagrant_cmd} up #{node_object['name']}"
+			cmd = "#{Controller.vagrant_cmd} up #{node_object['name']}"
 		end
 		if @debug
 			$logger.info($info.singleton.ssh.command % cmd)
@@ -126,7 +93,7 @@ module VenvCommon
 	    else
 	    	# >>>>>>>>>>
 	    	cmd = [
-	      	CLI.vagrant_cmd, 
+	      	Controller.vagrant_cmd, 
 	      	"ssh", 
 	      	"#{node_object['name']}",
 	      	"-c",

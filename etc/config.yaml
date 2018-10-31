@@ -170,13 +170,11 @@ settings:
         nfs:
           udp: true
           version: 3
-          linux:
-            nfs:
-              options:
-              - rw
-              - no_subtree_check
-              - all_squash
-              - async
+          options:
+            - rw
+            - no_subtree_check
+            - all_squash
+            - async
         rsync:
           args: 
             - '--verbose'

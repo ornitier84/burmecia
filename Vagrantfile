@@ -3,11 +3,14 @@
 # Clone the ARGV array for later use, rejecting any hyphenated arguments
 $vagrant_args = ARGV.clone
 $vagrant_args.delete_if { |arg| arg.include?('--') }
-# Load custom modules
-require 'cli'
-require 'environment'
-require 'config'
-require 'settings'
+# Load built-in libraries
+require 'date'
+require 'yaml'
+# Load custom libraries
+require 'machine/controller'
+require 'environment/context'
+require 'config/reader'
+require 'config/settings'
 if $debug
   begin
     require 'pry'
@@ -16,20 +19,19 @@ if $debug
     $logger.error($errors.debug.nopry)
   end
 end
-# Load built-in libraries
-require 'date'
-require 'yaml'
+
 def main
   # Specify minimum Vagrant/Vagrant API version
   Vagrant.require_version "#{$vagrant.require_version}"
   # Instantiate the vagrant cli node class
-  node = VenvCLI::Node.new
+  _machine = VenvMachine::Controller.new
   # Instantiate the vagrant environment nodes class
   nodes = VenvEnvironment::Nodes.new
   # Instantiate the vagrant environments context class
   context = VenvEnvironment::Context.new
   # Get environment context (if applicable)
   environment_context = context.get
+  return false unless environment_context
   # dotfile_path = ".vagrant/#{environment_context}"
   # if(ENV['VAGRANT_DOTFILE_PATH'].nil? && '.vagrant' != dotfile_path)
   # puts "Changing metadata directory to #{dotfile_path}"
@@ -49,7 +51,7 @@ def main
   # Generate the node set
   node_set = nodes.generate(environment_context)
   # Instantiate the vagrant cli group class
-  group = VenvCLI::Group.new
+  group = VenvMachine::Group.new
   # Boot up node groups if applicable
   group.up(node_set)
   # Instantiate the vagrant environments groups class
@@ -77,9 +79,9 @@ def main
           # Evaluate machine.vm settings
           machine_settings.evaluate(node_object, machine)
           if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
-            node.down(node_object, machine) 
+            _machine.down(node_object, machine) 
           elsif ["up", "provision", "reload"].any? { |arg| ARGV.include? arg }
-            node.up(node_object, node_set, config, machine)
+            _machine.up(node_object, node_set, config, machine)
           end
         end
     end
@@ -106,8 +108,12 @@ unless $vagrant.commands.noexec.include?(ARGV[0])
   else
     begin
       main
-    rescue Exception => e
-      $logger.error($errors.unhandled % [e, e.backtrace.first.to_s.bold])
+    rescue Exception => err
+      $logger.error($errors.unhandled % {
+        errmessage: err, 
+        firstline: err.backtrace.first.to_s,
+        backtrace: "\tat #{err.backtrace.to_yaml}" }
+      )
       abort
     end
   end

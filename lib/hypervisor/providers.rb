@@ -1,4 +1,4 @@
-module VenvProviders
+module VenvHypervisorProviders
 
 	class VirtualBox
 

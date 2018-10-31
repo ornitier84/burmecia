@@ -72,10 +72,10 @@ class YAMLTasks
 				yaml_config = YAML.load(ERB.new(File.read(yamlfile)).result(binding))
 			rescue Exception => e
 				warn("#{yamlfile} fails yaml syntax check!")
-				raise("Error was #{e}")
+				abort("Error was #{e}")
 			end
 	else
-		raise("Could not find config file! #{yamlfile}")
+		abort("Could not find config file! #{yamlfile}\nAre you in the project root? #{$_VAGRANT_PROJECT_ROOT}")
 	end
 	# check for toplevelkey section in config file and evaluate variables
 	if !yaml_config[toplevelkey].nil?

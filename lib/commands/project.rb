@@ -1,8 +1,10 @@
 # Manage project
 
-require 'common'
-require 'misc'
-cli = VenvCommon::CLI.new
+# Load custom libraries
+require 'util/controller'
+require 'util/prompt'
+require 'util/yaml'
+cli = VenvUtilController::Controller.new
 
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -53,7 +55,7 @@ case ARGV[1]
     end     
   when "shutdown"
     # Shutdown and (if applicable) delete all machines in current environment
-    prompt = VenvCommon::Prompt.new
+    prompt = VenvUtilPrompt::Prompt.new
     abort("Aborted!") if prompt.ask("Are you sure you want to shutdown and delete all of your defined machine?", ['y', 'n']) == 'n'
     cmd = "vagrant destroy --force"
     cli.run_cmd(cmd)    

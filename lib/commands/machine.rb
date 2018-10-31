@@ -1,5 +1,5 @@
 # Manage vagrant machines
-
+# Load custom libraries
 require 'commands/lib/group.commands'
 group = VenvCommandsGroup::Commands.new
 

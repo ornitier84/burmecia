@@ -3,7 +3,7 @@ module VenvEnvironment
 class Context
 
   def initialize
-    require 'misc'
+    require 'util/yaml'
     @env_config = YAMLTasks.new
   end
 
@@ -35,8 +35,8 @@ class Context
     environment_path = "#{$environment.basedir}/#{environment}"      
     # Safeguard
     if !File.exist?(environment_path)
-      $logger.error($errors.environment.path.notfound % environment_path)
-      abort
+      $logger.error($errors.environment.path.notfound % { envp: environment_path, env:environment })
+      return nil
     else      
       return environment
     end

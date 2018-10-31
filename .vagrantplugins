@@ -1,11 +1,13 @@
 # Append to load path
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'common'
-require 'config'
-require 'environment'
-require 'misc'
-
+$_VAGRANT_PROJECT_ROOT = File.dirname(__FILE__)
+require 'util/string'
+require 'config/reader'
+require 'environment/context'
+require 'util/yaml'
+# Quit if we're not in the project root, because yes.
+abort("You're not in the vagrant project root! Exiting.") unless Dir.pwd == $_VAGRANT_PROJECT_ROOT
 # Initialize config loader
 config = YAMLTasks.new
 Dir.glob($vagrant.commands.adhoc.files).each do |cmdf|

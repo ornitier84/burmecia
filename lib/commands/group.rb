@@ -1,16 +1,17 @@
 # Manage vagrant machine groups
 
-# Import libraries
+# Load custom libraries
+require 'util/controller'
 require 'commands/lib/group.commands'
 require 'commands/lib/environment.commands'
-require 'environment'
+require 'environment/context'
 # Instantiate the vagrant commands group class
 group = VenvCommandsGroup::Commands.new
 # Instantiate the vagrant commands environment class
 env = VenvCommandsEnvironment::Commands.new
 # Instantiate the vagrant environment nodes class
 @nodes = VenvEnvironment::Nodes.new
-cli = VenvCommon::CLI.new
+cli = VenvUtilController::Controller.new
 
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -60,17 +61,22 @@ when ARGV[1] == "create"
   $logger.info($info.commands.group.create % {group:machine_group, environment: group_environment})
   group.create(machine_group, options[:environment])
 when ARGV[1] == "destroy"
-  machine_targets = get_machines(group_environment, machine_group)
   env.activate(group_environment)
+  machine_targets = get_machines(group_environment, machine_group)
   cli.run_cmd("vagrant destroy #{machine_targets.join(' ')} --force")
+when ARGV[1] == "reload"
+  env.activate(group_environment)
+  $logger.info($info.commands.group.reload % { group:machine_group, environment: group_environment })
+  machine_targets = get_machines(group_environment, machine_group)
+  cli.run_cmd("vagrant reload #{machine_targets.join(' ')}")   
 when ARGV[1] == "status"
+  env.activate(group_environment)
   $logger.info($info.commands.group.status % { group:machine_group, environment: group_environment })
   machine_targets = get_machines(group_environment, machine_group)
-  env.activate(group_environment)
   cli.run_cmd("vagrant status #{machine_targets.join(' ')}")  
 when ARGV[1] == "up"
-  $logger.info($info.commands.group.up % {group:machine_group, environment: group_environment})
   env.activate(group_environment)
+  $logger.info($info.commands.group.up % {group:machine_group, environment: group_environment})
   machine_targets = get_machines(group_environment, machine_group)
   $logger.info($debugging.commands.group.up % { group:machine_group, environment: group_environment, machines:machine_targets.join(' ') }) if $debug
   cli.run_cmd("vagrant up #{machine_targets.join(' ')}")

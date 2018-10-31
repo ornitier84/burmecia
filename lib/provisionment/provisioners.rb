@@ -1,11 +1,11 @@
-module VenvProvisioners
+module VenvProvisionmentProvisioners
 
-	class Provisioner
+	class Provisioners
 
 		def initialize
-			require 'provisioners.ansible'
-			require 'common'			
-			@node = VenvCommon::CLI.new
+			require 'provisionment/provisioners/ansible'
+			require 'util/controller'			
+			@node = VenvUtilController::Controller.new
 			@ansible_settings = VenvProvisionersAnsible::Settings.new
 			@playbook = VenvProvisionersAnsible::Playbook.new
 		end
@@ -14,6 +14,7 @@ module VenvProvisioners
 			#####
 			# Determine the ansible provisioner
 			ansible_provisioner = $platform.is_windows ? "ansible_local" : "ansible"
+			ansible_is_local = $platform.is_windows ? true : false
 			if provisioner.dig("inventory")
 				if $platform.is_windows
 					@inventory = provisioner['inventory'].start_with?('/') ?
@@ -62,10 +63,10 @@ module VenvProvisioners
 							ansible.inventory_path = @inventory
 							if defined? Pry::rescue and $debug
 								Pry.rescue do
-									@ansible_settings.eval_ansible(node_object, ansible, local: true)
+									@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 								end
 							else
-								@ansible_settings.eval_ansible(node_object, ansible, local: true)
+								@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 							end
 						end
 					end
@@ -80,10 +81,10 @@ module VenvProvisioners
 					  ansible.groups = @group_set if @group_set
 					  if defined? Pry::rescue and $debug
 						  Pry.rescue do
-						  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
+						  	@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 						  end
 						else
-							@ansible_settings.eval_ansible(node_object, ansible, local: true)
+							@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 					  end
 					end
 				end
@@ -97,10 +98,10 @@ module VenvProvisioners
 				  ansible.groups = @group_set if @group_set
 				  if defined? Pry::rescue and $debug
 					  Pry.rescue do
-					  	@ansible_settings.eval_ansible(node_object, ansible, local: true)
+					  	@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 					  end
 					else
-						@ansible_settings.eval_ansible(node_object, ansible, local: true)
+						@ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
 				  end
 				end				
 			end

@@ -1,6 +1,6 @@
 # Sets environment context for vagrant operations
-
-# Import libraries
+# Load custom libraries
+require 'util/prompt'
 require 'commands/lib/environment.commands'
 # Instantiate the vagrant commands environment class
 env = VenvCommandsEnvironment::Commands.new
@@ -35,9 +35,10 @@ when "create"
   if File.exist?(environment_folder)
     abort "Abort. Existing environment folder found: #{environment_folder}"
   end
+  puts "Creating:"
   $environment.skeleton.each do |directory|
     dirobj = "#{environment_folder}/#{directory}"
-    puts "Creating #{dirobj}"
+    puts dirobj
     begin 
       FileUtils::mkdir_p dirobj if not File.exist?(dirobj)
     rescue Exception => e
@@ -50,7 +51,7 @@ when "list"
     puts f if File.directory?(f)
   }
 when "remove"
-  prompt = VenvCommon::Prompt.new
+  prompt = VenvUtilPrompt::Prompt.new
   environment_context = ARGV.last
   environment_folder = "#{$environment.basedir}/#{environment_context}"
   unless options.key?(:force)

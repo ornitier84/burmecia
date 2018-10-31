@@ -1,21 +1,21 @@
-module VenvNetworking
+module VenvNetwork
 
-  class Network
+  class Config
 
     def configure(config, node_set, host, machine)
 
           # Imports
-          require 'networking.providers'
+          require 'network/provider'
 
           # Configure VM network settings
           if host.dig('interfaces')
             if $is_kvm
               # Instantiate the vagrant network/libvirt class 
-              vlibvirt = VenvNetworkingProviders::VagrantLibvirt.new    
+              vlibvirt = VenvNetworkProvider::VagrantLibvirt.new    
               vlibvirt.configure(host, config, machine, host['interfaces'])
             else
               # Instantiate the vagrant network/virtualbox class 
-              vvirtualbox = VenvNetworkingProviders::VagrantVirtualBox.new    
+              vvirtualbox = VenvNetworkProvider::VagrantVirtualBox.new    
               vvirtualbox.configure(host, machine, host['interfaces'])
             end
           else

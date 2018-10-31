@@ -1,13 +1,13 @@
-module VenvProvision
+module VenvProvisionmentTasks
 
-	class Provision
+	class Tasks
 
 		# Imports
-		require 'provisioners'
+		require 'provisionment/provisioners'
 
 		def initialize
 		  # Instantiate the vagrant provisioner class 
-		  @invoke = VenvProvisioners::Provisioner.new			
+		  @provisioners = VenvProvisionmentProvisioners::Provisioners.new			
 		end
 
 	    def run(node_object, node_set=nil, machine=nil)
@@ -21,34 +21,34 @@ module VenvProvision
 	          when [provisioner.key?('local'), !provisioner['local'].nil?].all?
 	            if $debug 
 	            	Pry.rescue do
-	            		@invoke.local(node_object)              
+	            		@provisioners.local(node_object)              
 	            	end
 	            else
-            		@invoke.local(node_object)              
+            		@provisioners.local(node_object)              
 	            end
 	          when [provisioner.key?('shell'), !provisioner['shell'].nil?].all?
 	            if $debug 
 	            	Pry.rescue do
-	            		@invoke.shell(node_object, machine)
+	            		@provisioners.shell(node_object, machine)
 	            	end
 	            else
-	            	@invoke.shell(node_object, machine)
+	            	@provisioners.shell(node_object, machine)
 	            end
 	          when [provisioner.key?('ansible'), !provisioner['ansible'].nil?].all?
 	            if $debug 
 	            	Pry.rescue do
-	            		@invoke.ansible(node_object, provisioner['ansible'], node_set, machine)
+	            		@provisioners.ansible(node_object, provisioner['ansible'], node_set, machine)
 	            	end
 	            else
-	            	@invoke.ansible(node_object, provisioner['ansible'], node_set, machine)
+	            	@provisioners.ansible(node_object, provisioner['ansible'], node_set, machine)
 	            end	            
 	          when [provisioner.key?('puppet'), !provisioner['puppet'].nil?].all?
 	            if $debug 
 	            	Pry.rescue do
-		            	@invoke.puppet(node_object, machine)
+		            	@provisioners.puppet(node_object, machine)
 	            	end
 	            else
-	            	@invoke.puppet(node_object, machine)
+	            	@provisioners.puppet(node_object, machine)
 	            end
 	          else
 	            $logger.info($info.no_provisioners % node_object['name'])

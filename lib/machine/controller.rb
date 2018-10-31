@@ -1,25 +1,22 @@
-module VenvCLI
+module VenvMachine
 
-  class Node
+  class Controller
 
     def initialize
 
       # Load libraries
-      require 'common'
-      require 'linked'
-      require 'provision'
-      require 'machine'
-      require 'networking'
+      require 'machine/linker'
+      require 'provisionment/tasks'
+      require 'machine/configure'
+      require 'network/configure'
       # Instantiate the vagrant network class
-      @network = VenvNetworking::Network.new
+      @network = VenvNetwork::Config.new
       # Instantiate the vagrant hardware class
       @hardware = VenvMachine::Hardware.new
       # Instantiate the vagrant syncedfolders class
       @syncedfolders = VenvMachine::SyncedFolders.new
       # Instantiate the vagrant provision class
-      @provisioners = VenvProvision::Provision.new
-      # Instantiate the vagrant hardware class
-      @controls = VenvMachine::Controls.new 
+      @provisionment_tasks = VenvProvisionmentTasks::Tasks.new
       # Instantiate the vagrant linked machines class
       @linked_machines = VenvLinked::Machine.new
 
@@ -27,7 +24,11 @@ module VenvCLI
 
     def down(node_object, machine)
 
-      @controls.halt(node_object, machine)
+      if ARGV.include?("halt")
+        $logger.info($info.boot_halt % node_object['name'])
+      elsif ARGV.include?("destroy")
+        $logger.info($info.boot_destroy % node_object['name'])
+      end
 
     end
 
@@ -67,9 +68,9 @@ module VenvCLI
 
     def provision(node_object, node_set=nil, machine=nil)
       if ARGV.include?('up') and !node_object['is_provisioned']
-        @provisioners.run(node_object, node_set, machine)
+        @provisionment_tasks.run(node_object, node_set, machine)
       elsif  ["provision"].any? { |arg| ARGV.include?(arg) }
-        @provisioners.run(node_object, node_set, machine)
+        @provisionment_tasks.run(node_object, node_set, machine)
       end
     end
 
@@ -78,8 +79,8 @@ module VenvCLI
   class Group
 
     def initialize
-      require 'common'     
-      @node = VenvCommon::CLI.new      
+      require 'util/controller'     
+      @node = VenvUtilController::Controller.new      
     end    
 
     def up(node_set)

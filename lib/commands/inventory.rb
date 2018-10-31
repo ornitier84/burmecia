@@ -1,6 +1,6 @@
 # Sets environment context for writing inventory yaml file relevant to specified environment
-
-require 'environment'
+# Load custom libraries
+require 'environment/context'
 # Instantiate the vagrant groups class
 @groups = VenvEnvironment::Groups.new
 # Instantiate the vagrant environment nodes class
@@ -59,8 +59,6 @@ def get_vars(key, environment_path, vars_type: 'host')
 end
 
 def write(environment='all')
-  require 'environment'
-
   # Define the environment path
   environments_path = environment == 'all' ?
     $environment.basedir : "#{$environment.basedir}/#{environment}"

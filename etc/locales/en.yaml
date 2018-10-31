@@ -22,6 +22,8 @@ strings:
       group:
         create: |-
           Creating group %{group} under environment %{environment}
+        reload: |-
+          Reloading node group %{group} under environment %{environment}
         status: |-
           Reporting status for node group %{group} under environment %{environment}
         up: |-
@@ -182,7 +184,7 @@ strings:
         notfound: |-
           Not activating %{env}, as the environment path %{envp} was not found.
           Activate an existing environment instead, e.g.
-          vagrant activate %{denv}
+          vagrant activate %{env}
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check
@@ -238,7 +240,9 @@ strings:
       For the full backtrace, set the debug option in config.yaml to 'true'
     unhandled: |-
       I encountered an unhandled exception
-      Error: %s
-      Excerpt from backtrace: %s
+      Error Message: %{errmessage}
+      First Line of Backtrace: %{firstline}
+      Full Backtrace: %{backtrace}
+
       Try enabling debugging via
       vagrant option debug on

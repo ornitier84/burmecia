@@ -1,4 +1,4 @@
-module VenvNetworkingProviders
+module VenvNetworkProvider
 
     class VagrantPorts
 

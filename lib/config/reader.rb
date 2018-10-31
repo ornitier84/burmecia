@@ -4,11 +4,10 @@ require 'log4r/config'
 require 'vagrant/ui'
 require 'yaml'
 # Load custom modules
-require 'misc'
-require 'formatter'
+require 'util/yaml'
 # Load main config
-vagrant_config_file = File.expand_path('../../etc/config.yaml', __FILE__)
-vagrant_locale_file = File.expand_path('../../etc/locales/en.yaml', __FILE__)
+vagrant_config_file = File.expand_path('etc/config.yaml', $_VAGRANT_PROJECT_ROOT)
+vagrant_locale_file = File.expand_path('etc/locales/en.yaml', $_VAGRANT_PROJECT_ROOT)
 # Initialize config loader
 config = YAMLTasks.new
 # Load language locale, initialize variables in global scope
@@ -34,12 +33,14 @@ $is_kvm = defined?('VagrantPlugins::ProviderLibvirt') ? true : false
 $provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
 # Create required file paths
 paths = [$logging.logs_dir]
-paths.each do |directory|
-  begin 
-  	FileUtils::mkdir_p directory if not File.exist?(directory)
-  rescue Exception => e
-    $logger.error($errors.fso.operations.failure % e)
-  end
+if Dir.pwd == $_VAGRANT_PROJECT_ROOT
+	paths.each do |directory|
+	  begin 
+	  	FileUtils::mkdir_p directory if not File.exist?(directory)
+	  rescue Exception => e
+	    $logger.error($errors.fso.operations.failure % e)
+	  end
+	end
 end
 ## Required plugins
 @required_plugins = []

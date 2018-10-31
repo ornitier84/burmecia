@@ -16,7 +16,7 @@ module VenvMachine
 			        if $vagrant.synced_folder.defaults.type == 'nfs'
 			          nfs_udp = !folder['nfs_udp'].nil? ? folder['nfs_udp'] : $vagrant.synced_folder.defaults.nfs.udp
 			          nfs_version = !folder['nfs_version'].nil? ? folder['nfs_version'] : $vagrant.synced_folder.defaults.nfs.version
-			          linux_nfs_options = folder.dig('linux__nfs_options') ? folder['linux__nfs_options'] : $vagrant.synced_folder.defaults.nfs.linux.nfs.options
+			          linux_nfs_options = folder.dig('linux__nfs_options') ? folder['linux__nfs_options'] : $vagrant.synced_folder.defaults.nfs.options
 			          machine.vm.synced_folder folder['source'], folder['target'], 
 			            type: type, 
 			            nfs_udp: nfs_udp
@@ -59,24 +59,12 @@ module VenvMachine
 
 	end
 
-	class Controls
-
-		def halt(node_object, machine)
-		  if ARGV.include?("halt")
-		    $logger.info($info.boot_halt % node_object['name'])
-		  elsif ARGV.include?("destroy")
-		    $logger.info($info.boot_destroy % node_object['name'])
-		  end
-		end
-
-	end
-
 	class Hardware
 
 		def initialize
-			require 'providers'
-			@virtualbox = VenvProviders::VirtualBox.new
-			@libvirt = VenvProviders::LibVirt.new
+			require 'hypervisor/providers'
+			@virtualbox = VenvHypervisorProviders::VirtualBox.new
+			@libvirt = VenvHypervisorProviders::LibVirt.new
 		end
 
 		def get_local_resources(platform, resource)

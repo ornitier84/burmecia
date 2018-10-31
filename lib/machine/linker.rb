@@ -5,8 +5,8 @@ module VenvLinked
     def initialize
       
       # Load libraries
-      require 'common'     
-      @node = VenvCommon::CLI.new
+      require 'util/controller'
+      @node = VenvUtilController::Controller.new
 
     end
 

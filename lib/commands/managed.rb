@@ -1,11 +1,12 @@
 # Manage bare-metal machines
-
-require 'common'
-require 'environment'
+# Load built-in libraries
 require 'open3'
-require 'networking'
+# Load custom libraries
+require 'util/controller'
+require 'environment/context'
+require 'network/configure'
 nodes = VenvEnvironment::Nodes.new
-@port = VenvNetworking::TCP.new
+@port = VenvNetwork::TCP.new
 
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -133,8 +134,8 @@ context = VenvEnvironment::Context.new
 environment_context = context.get
 # Read any environment-specific options
 context.join(environment_context)
-# Instantiate the vagrant common cli class
-cli = VenvCommon::CLI.new
+# Instantiate the vagrant util controller class
+cli = VenvUtilController::Controller.new
 # Args
 vagrant_args = ARGV.clone
 vagrant_args.delete_if { |arg| arg.include?('--') }
