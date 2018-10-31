@@ -169,12 +169,12 @@ settings:
         mount_options: []
         nfs:
           udp: true
-          version: 3
-          options:
-            - rw
-            - no_subtree_check
-            - all_squash
-            - async
+          # version: 3
+          # options:
+          #   - rw
+          #   - no_subtree_check
+          #   - all_squash
+          #   - async
         rsync:
           args: 
             - '--verbose'
