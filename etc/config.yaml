@@ -48,7 +48,7 @@ settings:
     context_file: .vagrant/tmp/.environment_context
     current_context: <%= File.read('.vagrant/tmp/.environment_context') if File.exist?('.vagrant/tmp/.environment_context') rescue '' %>
     defaults: 
-      context: etejeda
+      context: contoso
     node:
       definitions:
         exclude_paths: 
