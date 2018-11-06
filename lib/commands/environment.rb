@@ -2,6 +2,8 @@
 # Load custom libraries
 require 'util/prompt'
 require 'commands/lib/environment.commands'
+require 'util/fso'
+include VenvUtilFSO 
 # Instantiate the vagrant commands environment class
 env = VenvCommandsEnvironment::Commands.new
 
@@ -39,17 +41,15 @@ when "create"
   $environment.skeleton.each do |directory|
     dirobj = "#{environment_folder}/#{directory}"
     puts dirobj
-    begin 
-      FileUtils::mkdir_p dirobj if not File.exist?(dirobj)
-    rescue Exception => e
-      $logger.error($errors.fso.operations.failure % e)
-    end
+    fso_mkdir(dirobj)
   end  
 when "list"
+  $logger.info($info.commands.environment.args.list.listing)
   Dir.glob("#{$environment.basedir}/*").select {
     |f| 
     puts f if File.directory?(f)
   }
+  $logger.info($info.commands.environment.args.list.active % env.get)
 when "remove"
   prompt = VenvUtilPrompt::Prompt.new
   environment_context = ARGV.last
@@ -58,12 +58,7 @@ when "remove"
     abort("aborted!") if prompt.ask("Are you sure you want to remove and delete #{environment_folder}?", ['y', 'n']) == 'n'
   end
   puts "Removing #{environment_folder}"
-  begin 
-    FileUtils::rmtree environment_folder if File.exist?(environment_folder)
-    puts "Done!"
-  rescue Exception => e
-    $logger.error($errors.fso.operations.failure % e)
-  end
+  puts "Done!" if fso_rmtree(environment_folder)
 else
   puts opt_parser
 end

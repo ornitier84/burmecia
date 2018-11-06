@@ -1,10 +1,8 @@
 # Sets environment context for writing inventory yaml file relevant to specified environment
 # Load custom libraries
-require 'environment/context'
-# Instantiate the vagrant groups class
-@groups = VenvEnvironment::Groups.new
+require 'environment/main'
 # Instantiate the vagrant environment nodes class
-@nodes = VenvEnvironment::Nodes.new
+@context = VenvEnvironment::Main.new
 
 @vars_dict = {}
 @vars_group = {}
@@ -68,8 +66,8 @@ def write(environment='all')
   # Define the load pattern for reading yaml files
   environment_path = "#{$environment.basedir}/#{environment}/#{$environment.nodesdir}"
   # Derive the node/group set
-  node_set = @nodes.generate(environment)
-  group_set = @groups.generate(node_set)
+  node_set = @context.generate_nodeset(environment)
+  group_set = @context.generate_groupset(node_set)
   #
   # Build the ansible inventory hash
   #

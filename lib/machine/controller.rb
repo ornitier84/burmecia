@@ -1,22 +1,23 @@
 module VenvMachine
 
+
   class Controller
 
     def initialize
-
+      
       # Load libraries
+      require 'environment/keys'
       require 'machine/linker'
-      require 'provisionment/tasks'
-      require 'machine/configure'
+      require 'provisionment/main'
+      require 'machine/config'
       require 'network/configure'
       # Instantiate the vagrant network class
+      @keys = VenvEnvironmentKeys::Keys.new
       @network = VenvNetwork::Config.new
       # Instantiate the vagrant hardware class
-      @hardware = VenvMachine::Hardware.new
-      # Instantiate the vagrant syncedfolders class
-      @syncedfolders = VenvMachine::SyncedFolders.new
+      @_machine = VenvMachineConfig::Config.new
       # Instantiate the vagrant provision class
-      @provisionment_tasks = VenvProvisionmentTasks::Tasks.new
+      @provisionment_tasks = VenvProvisionment::Main::Tasks.new
       # Instantiate the vagrant linked machines class
       @linked_machines = VenvLinked::Machine.new
 
@@ -44,11 +45,11 @@ module VenvMachine
       # Define box download behavior
       config.vm.box_download_insecure = $vagrant.box_download_insecure
       # Configure hardware
-      @hardware.configure(config, node_object, machine)
+      @_machine.configure_hardware(config, node_object, machine)
       # Configure networking
       @network.configure(config, node_set, node_object, machine)
       # Configure vagrant synced folders
-      @syncedfolders.configure(node_object, machine)
+      @_machine.configure_synced_folders(node_object, machine)
       # Provision Machine if applicable
       no_provision = [
         $no_provision,
@@ -56,7 +57,7 @@ module VenvMachine
         (ARGV.include?("--no-provision"))
       ].any?
       unless no_provision
-        provision(node_object, node_set, machine)
+        provision(node_object, config, node_set, machine)
       end
       # Start any linked machines
       if $debug and defined? Pry::rescue  
@@ -66,10 +67,16 @@ module VenvMachine
       end
     end
 
-    def provision(node_object, node_set=nil, machine=nil)
-      if ARGV.include?('up') and !node_object['is_provisioned']
-        @provisionment_tasks.run(node_object, node_set, machine)
-      elsif  ["provision"].any? { |arg| ARGV.include?(arg) }
+    def provision(node_object, config=nil, node_set=nil, machine=nil)
+      if [
+        (ARGV.include?('up') and !node_object['is_provisioned']),
+        $vagrant_args.include?("provision")
+      ].any?
+        # Insert environment-specific keys
+        @keys.insert(config, node_object, 
+          $environment_private_key_file, 
+          $environment_public_key_file, 
+          $environment_authorized_keys_file)       
         @provisionment_tasks.run(node_object, node_set, machine)
       end
     end

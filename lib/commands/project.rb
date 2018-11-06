@@ -4,7 +4,9 @@
 require 'util/controller'
 require 'util/prompt'
 require 'util/yaml'
+require 'commands/lib/environment.commands'
 cli = VenvUtilController::Controller.new
+env = VenvCommandsEnvironment::Commands.new
 
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -64,8 +66,8 @@ case ARGV[1]
     puts "Running vagrant tests ..."
     starttime = Time.now
     timestamp = starttime.utc.strftime('%Y%m%d%H%M%S')
-    environment_context_file = ".vagrant/.environment_context"
-    current_context = File.read(environment_context_file) rescue 'all'
+    environment_context_file = ".vagrant/tmp/.environment_context"
+    current_context = env.get
     puts "Testing environment create"
     system("vagrant environment create dummy-#{timestamp}")
     puts "Testing environment activate"
@@ -82,7 +84,7 @@ case ARGV[1]
     system("vagrant halt dummy-#{timestamp}")
     puts "Testing vagrant destroy with --force"
     system("vagrant destroy dummy-#{timestamp} --force")
-    machine_folder = File.expand_path("../.vagrant/machines/dummy-#{timestamp}", __FILE__)
+    machine_folder = File.expand_path("../.vagrant/#{current_context}/machines/dummy-#{timestamp}", __FILE__)
     puts "Removing machine folder #{machine_folder}"
     begin
       FileUtils::rmtree machine_folder if File.exist?(machine_folder)

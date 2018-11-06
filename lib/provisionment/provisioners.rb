@@ -27,8 +27,8 @@ module VenvProvisionmentProvisioners
 				end
 			else
 				@inventory = $platform.is_windows ?
-				"#{$vagrant.basedir.windows}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory" :
-				"#{$vagrant.basedir.posix}/.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+				"#{$vagrant.basedir.windows}/#{$vagrant.local_data_dir}/provisioners/ansible/inventory/vagrant_ansible_inventory" :
+				"#{$vagrant.basedir.posix}/#{$vagrant.local_data_dir}/provisioners/ansible/inventory/vagrant_ansible_inventory"
 			end
 			# 'controller' mode logic
 			controller_mode = [$managed, $ansible.mode == 'controller'].any?

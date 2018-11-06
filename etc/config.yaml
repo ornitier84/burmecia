@@ -7,10 +7,10 @@ settings:
       basedir: provisioners/ansible
       cfg: ansible.cfg
       playbooks:
-        set: ".vagrant/.playbooks_grouped.yaml"
+        set: ".vagrant/tmp/.playbooks_grouped.yaml"
     mode: controller #standalone
     surrogate: ansible-controller
-    vardir: ".vagrant/machines/%s/provisioners/ansible"
+    vardir: "<%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>/machines/%s/provisioners/ansible"
     default_include_statement: 'import_playbook'
     windows_helper_script: scripts/windows.ansible-playbook.sh
     scratch:
@@ -30,10 +30,25 @@ settings:
       local:
         install_mode: pip
   environment:
+    basedir: environments
+    nodesdir: machines
+    keys:
+      insert_keys: true
+      keysdir: '.keys'
+      prestage_dir: /tmp
+      dest_private_key_file: /tmp/id_rsa.tmp
+      dest_public_key_file: /tmp/id_rsa.pub.tmp
+      dest_authorized_keys_file: /tmp/authorized_keys.tmp
+      post_commands: |-
+        cp -f /tmp/id_rsa.tmp /home/vagrant/.ssh/id_rsa
+        cp -f /tmp/id_rsa.pub.tmp /home/vagrant/.ssh/id_rsa.pub
+        cp -f /tmp/authorized_keys.tmp /home/vagrant/.ssh/authorized_keys
+        chown vagrant:vagrant /home/vagrant/.ssh/*
+        chmod 400 /home/vagrant/.ssh/id_rsa*
+    context_file: .vagrant/tmp/.environment_context
+    current_context: <%= File.read('.vagrant/tmp/.environment_context') if File.exist?('.vagrant/tmp/.environment_context') rescue '' %>
     defaults: 
       context: etejeda
-    context_file: .vagrant/.environment_context
-    context: <%= File.read('.vagrant/.environment_context') if File.exist?('.vagrant/.environment_context') rescue '' %>
     node:
       definitions:
         exclude_paths: 
@@ -51,8 +66,6 @@ settings:
           env_hash:
             - node_definition_path
             - name
-    basedir: environments
-    nodesdir: machines
     skeleton:
       - group_vars/all
       - host_vars
@@ -73,9 +86,9 @@ settings:
         cpus: 4
   logging:
     debug: false
-    logs_dir: ".vagrant/var/log"
+    logs_dir: "<%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>/var/log"
   semaphores:
-    debug: ".vagrant/.debug"
+    debug: ".vagrant/tmp/.debug"
   managed_nodes:
     posix:
       required_key: ssh
@@ -127,6 +140,8 @@ settings:
   vagrant:
     api_version: 2
     require_version: ">= 1.7.2"
+    tmpdir: ".vagrant/tmp"
+    separate_dotfile_paths: false
     commands:
       noexec: <%= Dir.glob("lib/commands/*.rb").map { |file| File.basename(file, ".rb") } %>
       adhoc: 
@@ -156,21 +171,20 @@ settings:
     ssh:
       private_key_path:
         - 'etc/sshkeys/insecure'
-        # - 'etc/sshkeys/secure'
       insert_key: false
       username: vagrant
+    use_nfs: false
     synced_folder:
       defaults:
-        type: virtualbox
+        vagrant_target: /vagrant
         create: false
         owner: vagrant
         group: vagrant
         disabled: false
-        mount_options: []
         nfs:
           udp: true
           version: 3
-          options:
+          mount_options:
             - rw
             - no_subtree_check
             - all_squash
@@ -189,18 +203,10 @@ settings:
     no_mount_vagrant: false
     # disable nfs for windows vhosts (for now)
     # see https://github.com/winnfsd/vagrant-winnfsd/issues/53
-    use_nfs: false
-    nfs_mount_options: 
-      - rw
-      - nolock
-      - vers=3
-      - udp
-      - noatime
-      - actimeo=1
     vm_network_default_mode: 'private_network'
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
-    local_data_dir: ".vagrant"
+    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>
     basedir:
       posix: '<%= Dir.pwd %>'
       windows: '/vagrant'

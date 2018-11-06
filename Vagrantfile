@@ -7,38 +7,47 @@ $vagrant_args.delete_if { |arg| arg.include?('--') }
 require 'date'
 require 'yaml'
 # Load custom libraries
-require 'machine/controller'
-require 'environment/context'
-require 'config/reader'
 require 'config/settings'
+require 'environment/main'
+require 'machine/controller'
+require 'commands/lib/environment.commands'
 if $debug
   begin
     require 'pry'
     require 'pry-rescue'
   rescue exception => e
     $logger.error($errors.debug.nopry)
+    $debug = false
   end
 end
 
 def main
+
   # Specify minimum Vagrant/Vagrant API version
   Vagrant.require_version "#{$vagrant.require_version}"
   # Instantiate the vagrant cli node class
   _machine = VenvMachine::Controller.new
-  # Instantiate the vagrant environment nodes class
-  nodes = VenvEnvironment::Nodes.new
   # Instantiate the vagrant environments context class
-  context = VenvEnvironment::Context.new
+  context = VenvEnvironment::Main.new
   # Get environment context (if applicable)
   environment_context = context.get
-  return false unless environment_context
-  # dotfile_path = ".vagrant/#{environment_context}"
-  # if(ENV['VAGRANT_DOTFILE_PATH'].nil? && '.vagrant' != dotfile_path)
-  # puts "Changing metadata directory to #{dotfile_path}"
-  # ENV['VAGRANT_DOTFILE_PATH'] = dotfile_path
-  # puts 'removing default metadata directory ' + FileUtils.rm_r('.vagrant').join("\n")
-  # system 'vagrant ' + ARGV.join(' ')
-  # end
+  # Activate default environment context if none is detected
+  if environment_context.empty?
+    env = VenvCommandsEnvironment::Commands.new
+    environment_context = $environment.defaults.context
+    $logger.warn($warnings.context.environment.activate_default % environment_context)
+    env.activate(environment_context)
+  end
+  # Initialize environment keys
+  context.initialize_keys(environment_context)
+  environment_keys_dir = File.join(
+    $environment.basedir, 
+    environment_context, 
+    $environment.keys.keysdir
+  )
+  $environment_private_key_file = File.join(environment_keys_dir, "#{environment_context}")
+  $environment_public_key_file = File.join(environment_keys_dir, "#{environment_context}.pub")
+  $environment_authorized_keys_file = File.join(environment_keys_dir, "authorized_keys")
   # Read any environment-specific options
   context.join(environment_context)
   # Warn us if we're calling provisionment and ansible is in 'controller' mode
@@ -46,18 +55,21 @@ def main
     $ansible.mode == 'controller',
     $vagrant_args.first == 'provision',
     $vagrant_args.last != $ansible.surrogate].all?
-    $logger.warn($warnings.provisioners.ansible.controller.skipping % {machine: '{{ node_name }}', surrogate: $ansible.surrogate })
+    $logger.warn($warnings.provisioners.ansible.controller.skipping % {
+      machine: '{{ node_name }}', surrogate: $ansible.surrogate 
+    }
+    )
   end
   # Generate the node set
-  node_set = nodes.generate(environment_context)
+  node_set = context.generate_nodeset(environment_context)
   # Instantiate the vagrant cli group class
   group = VenvMachine::Group.new
   # Boot up node groups if applicable
   group.up(node_set)
   # Instantiate the vagrant environments groups class
-  groups = VenvEnvironment::Groups.new
+  # groups = VenvEnvironment::Groups.new
   # Generate the group set
-  @group_set = groups.generate(node_set)
+  @group_set = context.generate_groupset(node_set)
   # Instantiate the vagrant machine ssh settings class
   ssh_settings = VenvSettings::SSH.new
   # Instantiate the vagrant machine config settings class
@@ -74,8 +86,8 @@ def main
           else
             $vagrant.defaults.autostart
           end        
-        # Define node
-        config.vm.define node_object['name'], autostart: autostart_setting do |machine|
+          # Define node
+          config.vm.define node_object['name'], autostart: autostart_setting do |machine|
           # Evaluate machine.vm settings
           machine_settings.evaluate(node_object, machine)
           if ["halt", "destroy"].any? { |arg| ARGV.include? arg }
@@ -102,6 +114,22 @@ def main
 end
 # Only invoke the main function if none of our custom commands have been called
 unless $vagrant.commands.noexec.include?(ARGV[0])
+  
+  # Check for per-environment dotfile path setting
+  if $vagrant.separate_dotfile_paths 
+    is_set = [
+      ENV['VAGRANT_DOTFILE_PATH'],
+      ENV['VAGRANT_DOTFILE_PATH'] != '.vagrant/'
+    ].all?
+    unless is_set
+      $logger.error(
+        $errors.vagrant.no_env_dotfile % 
+        {  env:$environment.defaults.context, args:ARGV.join(' ') }
+        )
+      abort
+    end
+  end
+
   if $debug and defined? Pry::rescue
     $logger.warn('Debugging enabled')
     Pry::rescue{ main }
@@ -117,5 +145,6 @@ unless $vagrant.commands.noexec.include?(ARGV[0])
       abort
     end
   end
+else
+  $logger.warn($warnings.vagrant.noexec)
 end
-

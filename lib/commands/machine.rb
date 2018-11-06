@@ -44,8 +44,8 @@ options.dig(:group),
 options.dig(:name)
 ].all?
   @machine_name = options[:name]
-  @machine_box = options.dig(:box) ? options[:box] : $vagrant.defaults.nodes.keys.box
-  @machine_size = options.dig(:size) ? options[:size] : $vagrant.defaults.nodes.size
+  @machine_box = options.fetch(:box, $vagrant.defaults.nodes.keys.box)
+  @machine_size = options.fetch(:size, $vagrant.defaults.nodes.size)
   @boot_timeout = $vagrant.defaults.config.boot_timeout
   machine_environment = options[:environment]
   machine_group = options[:group]
@@ -55,14 +55,7 @@ options.dig(:name)
   machine_yaml = YAML.load(ERB.new(File.read($vagrant.templates.node)).result(binding)).to_yaml(line_width: -1)
   machine_yaml_file = "#{machine_group_path}/#{@machine_name}.yaml"
   $logger.info($info.commands.node.create % machine_yaml_file)
-  begin
-    File.open(machine_yaml_file,"w") do |file|
-      file.write(machine_yaml)
-    end
-  rescue Exception => e
-    $logger.error($errors.fso.operations.failure % e)
-  end
-
+  puts 'Done!' if fso_write(machine_yaml_file, machine_yaml)
 else
   puts opt_parser
 end

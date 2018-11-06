@@ -4,13 +4,13 @@
 require 'util/controller'
 require 'commands/lib/group.commands'
 require 'commands/lib/environment.commands'
-require 'environment/context'
+require 'environment/main'
 # Instantiate the vagrant commands group class
 group = VenvCommandsGroup::Commands.new
 # Instantiate the vagrant commands environment class
 env = VenvCommandsEnvironment::Commands.new
 # Instantiate the vagrant environment nodes class
-@nodes = VenvEnvironment::Nodes.new
+@context = VenvEnvironment::Main.new
 cli = VenvUtilController::Controller.new
 
 options = {}
@@ -43,14 +43,18 @@ opt_parser.parse!
 def get_machines(group_environment, machine_group)
   # Generate the node set
   machine_targets = []
-  node_set = @nodes.generate(group_environment)
+  node_set = @context.generate_nodeset(group_environment)
   node_set_filtered = node_set.select { |k, v| k['groups'].include?(machine_group) }
   node_set_filtered.each { |n| machine_targets.push(n['name']) }
   return machine_targets
 end
 
 # Quit if environment not specified
-exit unless options.dig(:environment)
+if !options.dig(:environment)
+  $logger.error($errors.commands.group.noenv)
+  puts opt_parser
+  exit
+end
 
 # Gather variables
 machine_group = ARGV[2]

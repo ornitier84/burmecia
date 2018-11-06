@@ -4,6 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 $_VAGRANT_PROJECT_ROOT = File.dirname(__FILE__)
 require 'util/string'
 require 'config/reader'
+require 'config/vars'
 require 'environment/context'
 require 'util/yaml'
 # Quit if we're not in the project root, because yes.

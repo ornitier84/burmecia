@@ -19,6 +19,13 @@ strings:
     boot_completed: |-
       Machine booted and ready!
     commands:
+      environment:
+        args: 
+          list: 
+            listing: |-
+              Listing active environments
+            active: |-
+              Currently active environment is %s
       group:
         create: |-
           Creating group %{group} under environment %{environment}
@@ -35,6 +42,9 @@ strings:
       done: |-
         Done!
     environment:
+      keys:
+        insert: |-
+          Inserting environment keys for node %s
       activate: |-
         Activating vagrant environment %s
         Environment context file is %s.
@@ -76,7 +86,7 @@ strings:
       ansible:
         controller: |-
           Ansible provisioner is in 'controller' mode. 
-          Running ansible actions from %{ansible_surrogate}
+          Ansible actions will executed via %{ansible_surrogate}
           Machine targets: 
           %{machines}
     singleton:
@@ -91,6 +101,9 @@ strings:
   warnings:
     context:
       environment:
+        activate_default: |-
+          <<[o_o]>> I couldn't determine the currently active environment context
+          Using default: %s
         no_active: |-
           You have not activated a vagrant environment.
           Please do so via `vagrant environment activate ENVIRONMENT_NAME`
@@ -125,11 +138,11 @@ strings:
               As such, I am skipping the ansible provisionment step.
               Once it has been created, please run the provisionment action manually:
               vagrant provision %{machine}
-      fso:
-        not_found: |-
-          The file object was not found: %s
-    synced_folder_not_found: |-
-      Could not find path %s, skipping synced folder
+    fso:
+      not_found: |-
+        The file object was not found: %s
+      synced_folder_not_found: |-
+        Could not find path %s, skipping synced folder
     definition:
       skipped: |-
         Some node definitions were skipped!
@@ -145,12 +158,14 @@ strings:
       Detected non-Windows Host OS
       Make sure you specify the proper hypervisor key:
         key hypervisor: 'libvirt' 
+    vagrant:
+      noexec: |-
+        Skipping main function, since we're calling a custom command.   
   errors:
     commands:
-      ad_hoc:
-        synopsis: |-
-          The first line in ad-hoc command file must begin with an octothorp (#) and contain the command synopsis!
-          Skipping %s
+      group:
+        noenv: |-
+          <<[o_o]>> You must specify an environment
     debug:
       nopry: |-
         I couldn't import the 'pry' modules for debugging
@@ -246,3 +261,14 @@ strings:
 
       Try enabling debugging via
       vagrant option debug on
+    vagrant:
+      no_env_dotfile: |-
+        <<[x_x]>>
+        Vagrant has been instructed to separate dotfile paths
+        Invalid VAGRANT_DOTFILE_PATH environmental variable
+        Here's how to fix this error:
+        Run:
+          - vagrant environment list to view available environments
+          - vagrant environment activate {{ environment_name }} (e.g. %{env})
+          - export VAGRANT_DOTFILE_PATH={{ environment_name }} vagrant %{args}
+        Consult the README for more information

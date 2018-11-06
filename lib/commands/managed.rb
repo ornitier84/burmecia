@@ -3,7 +3,7 @@
 require 'open3'
 # Load custom libraries
 require 'util/controller'
-require 'environment/context'
+require 'environment/main'
 require 'network/configure'
 nodes = VenvEnvironment::Nodes.new
 @port = VenvNetwork::TCP.new
@@ -129,7 +129,7 @@ end
 
 
 # Instantiate the vagrant environments context class
-context = VenvEnvironment::Context.new
+context = VenvEnvironment::Main.new
 # Get environment context (if applicable)
 environment_context = context.get
 # Read any environment-specific options

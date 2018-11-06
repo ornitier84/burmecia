@@ -1,5 +1,6 @@
 module VenvProvisionersAnsible
 
+  require 'util/fso'
   require 'yaml'
 
   class Settings
@@ -51,6 +52,8 @@ module VenvProvisionersAnsible
 
   class Playbook
 
+    extend VenvUtilFSO 
+    
     def initialize()
 
       @sync_dir = $platform.is_windows ? '.' : $vagrant.basedir.posix
@@ -58,9 +61,9 @@ module VenvProvisionersAnsible
     end
 
     def create_var_folder(var_path)
-      if not File.exist?(var_path)
-        FileUtils::mkdir_p var_path
-      end
+
+      fso_mkdir(var_path)
+
     end
 
     def write_set(playbook_files)
@@ -69,16 +72,11 @@ module VenvProvisionersAnsible
       playbook_files.each do |item|
         playbook_content += "- #{$ansible.default_include_statement}: #{item['playbook']} hosts=#{item['host']}\n"
       end
+      
       playbook_file = "#{@sync_dir}/#{$ansible.paths.playbooks.set}"
       $logger.info("Writing #{playbook_file}") if $debug
-      begin
-        File.open(playbook_file, "w") do |file|
-          file.write playbook_content
-        end
-      rescue Exception => e
-         $logger.error($errors.fso.operations.failure % e)
-         abort
-      end
+      fso_write(playbook_file, playbook_content)
+
       return playbook_file
 
     end
@@ -145,28 +143,12 @@ module VenvProvisionersAnsible
       # and instead program a set of logic to 
       # dynamiclally reference these files
       ansible_extra_objects_dir = "#{host['node_definition_path']}/#{host['name']}"
-      if [File.exist?(ansible_extra_objects_dir), File.directory?(ansible_extra_objects_dir)].all?
-        begin
-          FileUtils.cp_r(ansible_extra_objects_dir, vagrant_ansible_var_folder_real_path)
-        rescue Exception => e
-          $logger.error($errors.fso.operations.failure % e)
-        end
-      else
-          $logger.warn($warnings.provisioners.fso.not_found % ansible_extra_objects_dir) if $debug
-      end
+      fso_copy(ansible_extra_objects_dir, vagrant_ansible_var_folder_real_path)
 
       # Write the main playbook file
       main_playbook_file = "#{vagrant_ansible_var_folder_real_path}/main.yaml"
-      
       $logger.info "Writing #{main_playbook_file}" if $debug
-
-      begin
-        File.open(main_playbook_file,"w") do |file|
-          file.write playbook_hash
-        end
-      rescue Exception => e
-         $logger.error($errors.fso.operations.failure % e)
-      end
+      fso_write(main_playbook_file, playbook_hash)
       
       # Define the main playbook from the vm perspective
       vagrant_ansible_var_folder = "#{sync_dir}/#{vagrant_ansible_var_folder_real_path}"
@@ -202,7 +184,7 @@ module VenvProvisionersAnsible
       default_vars_hash = {
         'vagrant_basedir' => sync_dir,
         'environment_basedir' => $environment.basedir,
-        'environment_context' => $environment.context,
+        'environment_context' => $environment.current_context,
         'keys_dir' => "#{$environment.basedir}/ssh"
       }      
       if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?

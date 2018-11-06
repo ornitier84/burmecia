@@ -1,6 +1,10 @@
 module VenvCommandsEnvironment
 
+  require 'environment/context'
+  
   class Commands
+
+    include VenvEnvironmentContext
   
     def activate(environment)
 
