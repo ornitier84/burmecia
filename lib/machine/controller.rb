@@ -26,9 +26,9 @@ module VenvMachine
     def down(node_object, machine)
 
       if ARGV.include?("halt")
-        $logger.info($info.boot_halt % node_object['name'])
+        $logger.info($info.boot_halt % node_object['name']) if $verbose or $debug
       elsif ARGV.include?("destroy")
-        $logger.info($info.boot_destroy % node_object['name'])
+        $logger.info($info.boot_destroy % node_object['name']) if $verbose or $debug
       end
 
     end
@@ -73,10 +73,15 @@ module VenvMachine
         $vagrant_args.include?("provision")
       ].any?
         # Insert environment-specific keys
-        @keys.insert(config, node_object, 
-          $environment_private_key_file, 
-          $environment_public_key_file, 
-          $environment_authorized_keys_file)       
+        private_key_file, public_key_file, authorized_keys_file = @keys.set(node_object['environment_context'])
+        if $environment.keys.insert_keys and !node_object['keys_provisioned'] or ARGV.any? { |arg| arg =~ /--reinject-keys/ }
+          @keys.inject(config, node_object, 
+            private_key_file, 
+            public_key_file, 
+            authorized_keys_file, 
+            "#{node_object['machine_dir']}/#{$semaphores.keys_provisioned}"
+          )
+        end
         @provisionment_tasks.run(node_object, node_set, machine)
       end
     end

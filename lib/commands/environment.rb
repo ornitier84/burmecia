@@ -3,7 +3,6 @@
 require 'util/prompt'
 require 'commands/lib/environment.commands'
 require 'util/fso'
-include VenvUtilFSO 
 # Instantiate the vagrant commands environment class
 env = VenvCommandsEnvironment::Commands.new
 
@@ -43,6 +42,10 @@ when "create"
     puts dirobj
     fso_mkdir(dirobj)
   end  
+when "init"
+  # Initialize environment keys
+  environment_context = ARGV.last
+  puts 'Done!' if env.initialize_keys(environment_context)  
 when "list"
   $logger.info($info.commands.environment.args.list.listing)
   Dir.glob("#{$environment.basedir}/*").select {

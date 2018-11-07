@@ -46,7 +46,7 @@ settings:
         chown vagrant:vagrant /home/vagrant/.ssh/*
         chmod 400 /home/vagrant/.ssh/id_rsa*
     context_file: .vagrant/tmp/.environment_context
-    current_context: <%= File.read('.vagrant/tmp/.environment_context') if File.exist?('.vagrant/tmp/.environment_context') rescue '' %>
+    current_context: <%= File.read('.vagrant/tmp/.environment_context') if File.exist?('.vagrant/tmp/.environment_context') rescue 'NOCONTEXT' %>
     defaults: 
       context: contoso
     node:
@@ -86,9 +86,12 @@ settings:
         cpus: 4
   logging:
     debug: false
-    logs_dir: "<%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>/var/log"
+    verbose: false
+    logs_dir: <%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>/var/log
   semaphores:
     debug: ".vagrant/tmp/.debug"
+    verbose: ".vagrant/tmp/.verbose"
+    keys_provisioned: ".keys_provisioned"
   managed_nodes:
     posix:
       required_key: ssh
@@ -139,13 +142,14 @@ settings:
     name: "<%= ENV['USER'] || ENV['USERNAME'] %>"
   vagrant:
     api_version: 2
-    require_version: ">= 1.7.2"
+    require_version: ">= 2.1.0"
     tmpdir: ".vagrant/tmp"
     separate_dotfile_paths: false
     commands:
       noexec: <%= Dir.glob("lib/commands/*.rb").map { |file| File.basename(file, ".rb") } %>
       adhoc: 
         files: lib/commands/*.rb
+      timeout: 60
     defaults:
       autostart: true
       config:
@@ -206,7 +210,7 @@ settings:
     vm_network_default_mode: 'private_network'
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
-    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>
+    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'].strip() || '.vagrant' %>
     basedir:
       posix: '<%= Dir.pwd %>'
       windows: '/vagrant'

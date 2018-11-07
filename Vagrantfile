@@ -38,16 +38,6 @@ def main
     $logger.warn($warnings.context.environment.activate_default % environment_context)
     env.activate(environment_context)
   end
-  # Initialize environment keys
-  context.initialize_keys(environment_context)
-  environment_keys_dir = File.join(
-    $environment.basedir, 
-    environment_context, 
-    $environment.keys.keysdir
-  )
-  $environment_private_key_file = File.join(environment_keys_dir, "#{environment_context}")
-  $environment_public_key_file = File.join(environment_keys_dir, "#{environment_context}.pub")
-  $environment_authorized_keys_file = File.join(environment_keys_dir, "authorized_keys")
   # Read any environment-specific options
   context.join(environment_context)
   # Warn us if we're calling provisionment and ansible is in 'controller' mode
@@ -115,15 +105,16 @@ end
 # Only invoke the main function if none of our custom commands have been called
 unless $vagrant.commands.noexec.include?(ARGV[0])
   
-  # Check for per-environment dotfile path setting
-  if $vagrant.separate_dotfile_paths 
+  # Enforce per-environment dotfile path setting if so configured
+  if $vagrant.separate_dotfile_paths
+
     is_set = [
       ENV['VAGRANT_DOTFILE_PATH'],
-      ENV['VAGRANT_DOTFILE_PATH'] != '.vagrant/'
+      ENV['VAGRANT_DOTFILE_PATH'] != '.vagrant/',
+      ENV['VAGRANT_DOTFILE_PATH'].include?($environment.current_context)
     ].all?
     unless is_set
-      $logger.error(
-        $errors.vagrant.no_env_dotfile % 
+      $logger.error($errors.vagrant.no_env_dotfile % 
         {  env:$environment.defaults.context, args:ARGV.join(' ') }
         )
       abort

@@ -1,228 +1,110 @@
 module VenvProvisionersAnsible
 
-  require 'util/fso'
-  require 'yaml'
+    def initialize
+      require 'provisionment/workers/ansible'
+      require 'util/controller'     
+      @node = VenvUtilController::Controller.new
+      @ansible_settings = VenvProvisionersAnsibleWorker::Settings.new
+      @playbook = VenvProvisionersAnsibleWorker::Playbook.new
+    end
 
-  class Settings
-
-    def eval_ansible(node_object, ansible, local: false)
-
-      # per-machine ansible options
-      if node_object.dig("ansible")
-          node_object['ansible'].each_pair do |item, value|
-          ansible.send("#{item}=", value)
+    def ansible(node_object, provisioner, node_set=nil, machine=nil)
+      #####
+      # Determine the ansible provisioner
+      ansible_provisioner = $platform.is_windows ? "ansible_local" : "ansible"
+      ansible_is_local = $platform.is_windows ? true : false
+      if provisioner.dig("inventory")
+        if $platform.is_windows
+          @inventory = provisioner['inventory'].start_with?('/') ?
+          provisioner['inventory'] :
+          "#{$vagrant.basedir.windows}/#{provisioner['inventory']}"
+        else
+          @inventory = provisioner['inventory'].start_with?('/') ?
+          provisioner['inventory'] :
+          "#{$vagrant.basedir.posix}/#{provisioner['inventory']}"
         end
+      else
+        @inventory = $platform.is_windows ?
+        "#{$vagrant.basedir.windows}/#{$vagrant.local_data_dir}/provisioners/ansible/inventory/vagrant_ansible_inventory" :
+        "#{$vagrant.basedir.posix}/#{$vagrant.local_data_dir}/provisioners/ansible/inventory/vagrant_ansible_inventory"
       end
-
-      # ansible_local options
-      if local
-        if $ansible.options.local.respond_to?(:each_pair)
-          $ansible.options.local.each_pair do |item, value|
-            if !value.nil?
-              if node_object.dig("ansible")
-                if !node_object["ansible"].key?(item.to_s)
-                  ansible.send("#{item}=", value)
+      # 'controller' mode logic
+      controller_mode = [$managed, $ansible.mode == 'controller'].any?
+      if controller_mode
+        #####
+        if node_object['name'] == $ansible.surrogate
+          if $managed and !$managed_node_set.empty?
+            $node_subset += $managed_node_set
+          end
+          if $node_subset.length > 1
+            _node_subset = $node_subset.select { |k, v| k['name'] != $ansible.surrogate }
+          else
+            _node_subset = $node_subset
+          end
+                # Write scratch playbook(s)
+          playbooks = []
+          _node_subset.each do |_node|
+            ansible_hash = _node['provisioners'].select{ 
+              |item| item.keys().first == 'ansible' }.first
+                  playbooks.push(@playbook.write(_node, ansible_hash['ansible'])) if !ansible_hash.nil?
+          end
+          if !playbooks.empty?
+            $logger.info($info.provisioners.ansible.controller % { 
+              machines: _node_subset.map { |s| "- #{s['name']}" }.join("\n"), 
+              ansible_surrogate: $ansible.surrogate
+              }
+            )         
+            @ansible_playbook = @playbook.write_set(playbooks)
+            machine.vm.provision ansible_provisioner do |ansible|
+              ansible.limit = "all"
+              ansible.playbook = @ansible_playbook
+              ansible.inventory_path = @inventory
+              if defined? Pry::rescue and $debug
+                Pry.rescue do
+                  @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
                 end
               else
-                ansible.send("#{item}=", value)
+                @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
               end
             end
           end
-        end
-        end
-
-      # ansible global options
-      if $ansible.options.global.respond_to?(:each_pair)
-        $ansible.options.global.each_pair do |item, value|
-          if !value.nil?
-            if node_object.dig("ansible")
-              if !node_object["ansible"].key?(item.to_s)
-                ansible.send("#{item}=", value)
+        #####
+        elsif [$node_subset.length == 1, $vagrant_args.last == $ansible.surrogate].all?
+        #####
+          ansible_hash = node_object['provisioners'].select{ 
+            |item| item.keys().first == 'ansible' }.first
+          machine.vm.provision ansible_provisioner do |ansible|
+            ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
+            ansible.inventory_path = @inventory
+            ansible.groups = @group_set if @group_set
+            if defined? Pry::rescue and $debug
+              Pry.rescue do
+                @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
               end
             else
-              ansible.send("#{item}=", value)
+              @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
             end
           end
         end
-      end
-
-    end
-
-  end  
-
-  class Playbook
-
-    extend VenvUtilFSO 
-    
-    def initialize()
-
-      @sync_dir = $platform.is_windows ? '.' : $vagrant.basedir.posix
-
-    end
-
-    def create_var_folder(var_path)
-
-      fso_mkdir(var_path)
-
-    end
-
-    def write_set(playbook_files)
-
-      playbook_content = ""
-      playbook_files.each do |item|
-        playbook_content += "- #{$ansible.default_include_statement}: #{item['playbook']} hosts=#{item['host']}\n"
-      end
-      
-      playbook_file = "#{@sync_dir}/#{$ansible.paths.playbooks.set}"
-      $logger.info("Writing #{playbook_file}") if $debug
-      fso_write(playbook_file, playbook_content)
-
-      return playbook_file
-
-    end
-    
-
-    def write(host, provisioner)
-
-      # Determine var folder
-      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host['name']}"
-      # Determine main vagrant_sync folder
-      sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
-      # Create node-specific ansible var folder
-      create_var_folder(vagrant_ansible_var_folder_real_path)
-
-      # Write the main playbook
-      if provisioner.dig("playbooks")
-          playbooks = provisioner['playbooks']
-          playbook_list = []
-          # Read playbook specification 
-          ######Parse Playbooks#BEGIN
-          case playbooks
-          when Array
-            playbooks.each do |playbook_item|
-              if playbook_item.respond_to?(:values)
-                playbook_path = playbook_item.values.first
-              else
-                playbook_path = playbook_item
-              end
-              playbook_path = playbook_path.start_with?('/') ? 
-              playbook_path : "#{sync_dir}/#{$ansible_basedir}/playbooks/#{playbook_path}"
-              if playbook_item.respond_to?(:keys)
-                playbook_option = { playbook_item.keys.first => playbook_path }
-              else
-                playbook_option = { $ansible.default_include_statement => playbook_path }
-              end
-              playbook_list.push(playbook_option)
+        #####
+      #####
+      else
+        ansible_hash = node_object['provisioners'].select{ |item| item.keys().first == 'ansible' }.first
+        machine.vm.provision ansible_provisioner do |ansible|
+          ansible.playbook = @playbook.write(node_object, ansible_hash['ansible'])['playbook']
+          ansible.inventory_path = @inventory
+          ansible.groups = @group_set if @group_set
+          if defined? Pry::rescue and $debug
+            Pry.rescue do
+              @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
             end
-          when String
-              playbook_path = playbooks.start_with?('/') ? 
-                playbooks : "#{sync_dir}/#{$ansible_basedir}/#{playbooks}"                    
-            playbook_list = [{ $ansible.default_include_statement => playbook_path }]
           else
-            playbook_list = []
+            @ansible_settings.eval_ansible(node_object, ansible, local: ansible_is_local)
           end
-          ######Parse Playbooks#END
-          scratch_playbook = _write(host, provisioner)
-          playbook_list.push({ $ansible.default_include_statement => scratch_playbook })
-          playbook_obj = playbook_list
-        else
-          # Write the scratch playbook
-          scratch_playbook = _write(host, provisioner)
-          playbook_obj = [{ $ansible.default_include_statement => scratch_playbook }]
-      end 
-    ######Check for playbook specification#END
-      case playbook_obj
-      when Array 
-        playbook_hash = playbook_obj.to_yaml(line_width: -1)
-      else
-        playbook_hash = ''
+        end       
       end
-      
-      # Copy any machine-specific playbooks to the ansible scratch space
-      # TODO Move away from copying file objects, 
-      # and instead program a set of logic to 
-      # dynamiclally reference these files
-      ansible_extra_objects_dir = "#{host['node_definition_path']}/#{host['name']}"
-      fso_copy(ansible_extra_objects_dir, vagrant_ansible_var_folder_real_path)
+      #####
 
-      # Write the main playbook file
-      main_playbook_file = "#{vagrant_ansible_var_folder_real_path}/main.yaml"
-      $logger.info "Writing #{main_playbook_file}" if $debug
-      fso_write(main_playbook_file, playbook_hash)
-      
-      # Define the main playbook from the vm perspective
-      vagrant_ansible_var_folder = "#{sync_dir}/#{vagrant_ansible_var_folder_real_path}"
-      
-      $logger.info("#{vagrant_ansible_var_folder}/main.yaml") if @debug
-      
-      return { 
-        "playbook" => "#{vagrant_ansible_var_folder}/main.yaml",
-        "host" => host['name']
-      }
-
-    end
-
-    def _write(host, ansible_hash_value)
-
-      ansible_hash = ansible_hash_value.clone
-      # TODO 
-      # Conform to DRY Method
-      # Determine var folder
-      vagrant_ansible_var_folder_real_path = "#{$ansible.vardir % host['name']}"
-      # Determine main vagrant_sync folder
-      sync_dir = $platform.is_windows ? $vagrant.basedir.windows : $vagrant.basedir.posix
-
-      # Create node-specific ansible var folder
-      create_var_folder(vagrant_ansible_var_folder_real_path)
-      
-      # playbook_hash = { 'hosts' => host['name'] }
-      
-      # Construct the ansible vars hash
-      # YAML representation:
-      # vars:
-      #   vagrant_basedir: some/path
-      default_vars_hash = {
-        'vagrant_basedir' => sync_dir,
-        'environment_basedir' => $environment.basedir,
-        'environment_context' => $environment.current_context,
-        'keys_dir' => "#{$environment.basedir}/ssh"
-      }      
-      if ansible_hash.key?('vars') and !ansible_hash['vars'].nil?
-        case ansible_hash['vars']
-        when Hash
-          vars_hash = { 'vars' => default_vars_hash.merge!(ansible_hash['vars']) }
-        when Array
-          default_vars_hash = { 'vars' =>
-            [ default_vars_hash ]
-          }
-          vars_hash = { 'vars' => default_vars_hash['vars'].concat(ansible_hash['vars']) }
-        end
-        ansible_hash.delete("vars")
-      else
-        ansible_hash['vars'] = default_vars_hash
-      end
-      # Remove the inventory key if it's present, as this is not a 
-      # playbook feature
-      ansible_hash.delete("inventory") if ansible_hash.key?('inventory')
-      ansible_hash.delete("playbooks") if ansible_hash.key?('playbooks')
-      case ansible_hash
-      when Hash
-        merged_ansible_hash = vars_hash.is_a?(Hash) ? 
-          vars_hash.merge!(ansible_hash) : ansible_hash
-        merged_playbook_hash = [{ 'hosts' => host['name'] }.merge!(merged_ansible_hash)]
-        # Define the scratch playbook from the host perspective
-        playbook_file = "#{vagrant_ansible_var_folder_real_path}/#{$ansible.scratch.playbook_name}"
-        File.open(playbook_file,"w") do |file|
-          file.write merged_playbook_hash.to_yaml(line_width: -1)
-        end
-        # Define the scratch playbook from the vm perspective
-        vagrant_ansible_var_folder = "#{sync_dir}/#{vagrant_ansible_var_folder_real_path}"
-        return $ansible.scratch.playbook_name
-      else
-        raise("This #{ansible_hash} ... is not a HASH")
-      end
-    end    
-  end
-
+    end 
 
 end

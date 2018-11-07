@@ -43,8 +43,10 @@ strings:
         Done!
     environment:
       keys:
-        insert: |-
-          Inserting environment keys for node %s
+        init: |-
+          Initializing environment keys for environment %s
+        inject: |-
+          Injecting environment keys into node %s
       activate: |-
         Activating vagrant environment %s
         Environment context file is %s.
@@ -114,6 +116,11 @@ strings:
           Node set is empty. Make sure you have defined your nodes correctly,
           and that you are treating managed nodes accordingly.
           This is why you are most likely seeing only the default vagrant status.
+    environment:
+      keys:
+        missing: |-
+          I did not find the environment keys for environment %{env}
+          Run vagrant environment init %{env}
     missing_plugin: |-
       You are missing at least one required vagrant plugin, install with:
     missing_plugin_install: |-
@@ -270,5 +277,8 @@ strings:
         Run:
           - vagrant environment list to view available environments
           - vagrant environment activate {{ environment_name }} (e.g. %{env})
-          - export VAGRANT_DOTFILE_PATH={{ environment_name }} vagrant %{args}
+          Posix:
+            - export VAGRANT_DOTFILE_PATH={{ environment_name }} vagrant %{args}
+          Windows:
+            - set VAGRANT_DOTFILE_PATH={{ environment_name }} && vagrant %{args}
         Consult the README for more information

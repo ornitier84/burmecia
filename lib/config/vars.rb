@@ -8,6 +8,12 @@ $debug = [
 	$logging.debug, 
 	File.exist?($semaphores.debug)
 	].any?
+$verbose = [
+	(ARGV.include?('--verbose')), 
+	ENV['VERBOSE'], ENV['verbose'], 
+	$logging.verbose, 
+	File.exist?($semaphores.verbose)
+	].any?
 # Instantiate the logger method
 $logger = Vagrant::UI::Colored.new
 # Initialize global variables

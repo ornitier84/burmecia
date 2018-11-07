@@ -82,6 +82,7 @@ module VenvEnvironmentNodes
         end
 
         # Populate node environment keys
+        node_definition['environment_context'] = environment_context
         node_definition['environment_path'] = environment_path_fq
         # Populate node definition key
         node_definition['node_definition_path'] = File.dirname(machine_definition_file)
@@ -90,7 +91,7 @@ module VenvEnvironmentNodes
         # Populate is_created property
         node_definition['is_created'] = File.exist?("#{node_definition['machine_dir']}/id")
         # Populate keys_provisioned property
-        node_definition['keys_provisioned'] = File.exist?("#{node_definition['machine_dir']}/keys_provisioned")
+        node_definition['keys_provisioned'] = File.exist?("#{node_definition['machine_dir']}/#{$keys_provisioned_semaphore}")
         # Populate is_provisioned property
         node_definition['is_provisioned'] = File.exist?("#{node_definition['machine_dir']}/action_provision")
         # intermediary variable node_name

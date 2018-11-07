@@ -86,11 +86,7 @@ case ARGV[1]
     system("vagrant destroy dummy-#{timestamp} --force")
     machine_folder = File.expand_path("../.vagrant/#{current_context}/machines/dummy-#{timestamp}", __FILE__)
     puts "Removing machine folder #{machine_folder}"
-    begin
-      FileUtils::rmtree machine_folder if File.exist?(machine_folder)
-    rescue Exception => e
-      system("Failed to remove #{machine_folder}!")
-    end
+    puts "Failed to remove #{machine_folder}!" if !fso_rmtree(machine_folder)
     puts "Restoring original environment context"
     system("vagrant environment activate #{current_context}")
     puts "Testing vagrant environment remove with --force"
