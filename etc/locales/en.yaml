@@ -269,6 +269,9 @@ strings:
       Try enabling debugging via
       vagrant option debug on
     vagrant:
+      multiple_providers: |-
+        Abort! Detected more than one virtualization provider!
+        This project only supports one.
       no_env_dotfile: |-
         <<[x_x]>>
         Vagrant has been instructed to separate dotfile paths

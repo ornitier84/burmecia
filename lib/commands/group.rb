@@ -73,6 +73,14 @@ when ARGV[1] == "reload"
   $logger.info($info.commands.group.reload % { group:machine_group, environment: group_environment })
   machine_targets = get_machines(group_environment, machine_group)
   cli.run_cmd("vagrant reload #{machine_targets.join(' ')}")   
+when ARGV[1] == "provision"
+  # env.activate(group_environment)
+  # $logger.info($info.commands.group.provision % { group:machine_group, environment: group_environment })
+  @context.join(group_environment)
+  machine_targets = get_machines(group_environment, machine_group)
+  surrogate_index = machine_targets.index{ |s| s == $ansible.surrogate }
+  machine_targets.insert(-1, machine_targets.delete_at(surrogate_index))
+  cli.run_cmd("vagrant provision #{machine_targets.join(' ')}")
 when ARGV[1] == "status"
   env.activate(group_environment)
   $logger.info($info.commands.group.status % { group:machine_group, environment: group_environment })

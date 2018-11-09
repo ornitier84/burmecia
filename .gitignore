@@ -28,7 +28,8 @@ var/
 *.egg
 
 # Packages/Binaries
-*.rpm.zip
+*.deb
+*.rpm
 *.zip
 
 # PyInstaller

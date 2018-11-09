@@ -74,7 +74,7 @@ module VenvMachine
       ].any?
         # Insert environment-specific keys
         private_key_file, public_key_file, authorized_keys_file = @keys.set(node_object['environment_context'])
-        if $environment.keys.insert_keys and !node_object['keys_provisioned'] or ARGV.any? { |arg| arg =~ /--reinject-keys/ }
+        if $environment.keys.inject_keys and !node_object['keys_provisioned'] or ARGV.any? { |arg| arg =~ /--reinject-keys/ }
           @keys.inject(config, node_object, 
             private_key_file, 
             public_key_file, 

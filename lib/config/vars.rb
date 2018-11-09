@@ -23,6 +23,8 @@ $managed = true if ARGV.index{ |s| s.include?("--managed-targets=") }
 # Hypervisors
 $is_virtualbox = defined?(VagrantPlugins::ProviderVirtualBox) ? true : false
 $is_kvm = defined?(VagrantPlugins::ProviderLibvirt) ? true : false
+# Quit if we detect more than one vagrant provider installed/enabled
+abort($errors.vagrant.multiple_providers) if [$is_virtualbox, $is_kvm].all?
 $provider_name = $is_kvm ? 'libvirt' : 'virtualbox'
 # Create required file paths
 paths = [

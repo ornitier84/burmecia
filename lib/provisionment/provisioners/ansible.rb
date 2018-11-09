@@ -2,8 +2,6 @@ module VenvProvisionersAnsible
 
     def initialize
       require 'provisionment/workers/ansible'
-      require 'util/controller'     
-      @node = VenvUtilController::Controller.new
       @ansible_settings = VenvProvisionersAnsibleWorker::Settings.new
       @playbook = VenvProvisionersAnsibleWorker::Playbook.new
     end

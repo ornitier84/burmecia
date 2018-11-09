@@ -2,7 +2,10 @@
 # This bootstraps ruby on CentOS/Ubuntu
 # It has been tested on CentOS 7.0 64bit and Ubuntu 16.04
 # set error handling to exit upon error
-set -e
+# set -e
+ruby_version=$1 #e.g. 1.9.2-p290, 2.5.3, etc
+# For Ruby Versions/Releases, see 
+# https://www.ruby-lang.org/en/downloads/releases/
 # Initialize step counter variable
 COUNT=0
 # Define logger function for feedback output
@@ -19,12 +22,14 @@ if [ "$EUID" -ne "0" ]; then
   logger "This script must be run as root." >&2
   exit 1
 fi
+# Check for prerequisite packages
+apt-get install -y libreadline-dev
 # Check for rbenv executable
 executable=rbenv
 if ! [[ $(type /usr/{,local/}{,s}bin/${executable} 2> /dev/null) ]];then
   logger "Did not find ${executable} binary or minimum version not met, attempting installation/ugprade ..."
 else
-   logger "${executable} is already installed or at minimum version"
+   echo "${executable} is already installed or at minimum version"
    exit 0
 fi
 # Check for Debian/RHEL OS Distribution
@@ -95,7 +100,7 @@ if ! [[ $(type /usr/{,local/}{,s}bin/ruby-build 2> /dev/null) ]];then
 	cd /tmp/ruby-build
 	./install.sh
 else
-	logger "ruby-build already installed"
+	echo "ruby-build already installed"
 fi
 
 logger "Install Ruby with OpenSSL option"
@@ -105,22 +110,22 @@ else
 	openssl_dir=/usr/local
 fi
 
-if ! test -d "/usr/local/rbenv/versions/1.9.2-p290";then
-	ruby-build 1.9.2-p290 /usr/local/rbenv/versions/1.9.2-p290 --with-openssl-dir=${openssl_dir}
+if ! test -d "/usr/local/rbenv/versions/${ruby_version}";then
+	ruby-build ${ruby_version} /usr/local/rbenv/versions/${ruby_version} --with-openssl-dir=${openssl_dir}
 fi
 
-logger "Preping ruby 1.9.2-p290"
+logger "Prepping ruby ${ruby_version}"
 
 source ~/.bash_profile
 
 # if [[ ! $($(rbenv which ruby) -v) =~ .*1.9.2.*p290.* ]];then
-#  rbenv install 1.9.2-p290
+#  rbenv install ${ruby_version}
 # else
-# 	logger "ruby 1.9.2-p290 already installed"
+# 	logger "ruby ${ruby_version} already installed"
 # fi
 
 rbenv rehash
-rbenv global 1.9.2-p290
+rbenv global ${ruby_version}
 
 if ! egrep -q '^#.*rbenv.*setup' /etc/profile.d/rbenv.sh;then
 	echo '# rbenv setup' > /etc/profile.d/rbenv.sh

@@ -68,6 +68,7 @@ case ARGV[1]
     timestamp = starttime.utc.strftime('%Y%m%d%H%M%S')
     environment_context_file = ".vagrant/tmp/.environment_context"
     current_context = env.get
+    _environment = { "VAGRANT_DOTFILE_PATH" => ".vagrant/dummy-#{timestamp}" }
     puts "Testing environment create"
     system("vagrant environment create dummy-#{timestamp}")
     puts "Testing environment activate"
@@ -77,16 +78,17 @@ case ARGV[1]
     puts "Testing vagrant inventory create"
     system("vagrant inventory create dummy-#{timestamp}")
     puts "Testing vagrant status"
-    system("vagrant status")
+    system(_environment, "vagrant status")
     puts "Testing vagrant up"
-    system("vagrant up dummy-#{timestamp}")
+    system(_environment, "vagrant up dummy-#{timestamp}")
     puts "Testing vagrant halt"
-    system("vagrant halt dummy-#{timestamp}")
+    system(_environment, "vagrant halt dummy-#{timestamp}")
     puts "Testing vagrant destroy with --force"
-    system("vagrant destroy dummy-#{timestamp} --force")
-    machine_folder = File.expand_path("../.vagrant/#{current_context}/machines/dummy-#{timestamp}", __FILE__)
-    puts "Removing machine folder #{machine_folder}"
-    puts "Failed to remove #{machine_folder}!" if !fso_rmtree(machine_folder)
+    system(_environment, "vagrant destroy dummy-#{timestamp} --force")
+    machine_dotfile_path = File.expand_path("../.vagrant/dummy-#{timestamp}")
+    puts "Removing machine dotfile path #{machine_dotfile_path}"
+    puts "Removing dotfile path #{machine_dotfile_path}"
+    puts "Failed to remove #{machine_dotfile_path}!" if !fso_rmtree(machine_dotfile_path)
     puts "Restoring original environment context"
     system("vagrant environment activate #{current_context}")
     puts "Testing vagrant environment remove with --force"

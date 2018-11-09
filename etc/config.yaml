@@ -33,7 +33,7 @@ settings:
     basedir: environments
     nodesdir: machines
     keys:
-      insert_keys: true
+      inject_keys: true
       keysdir: '.keys'
       prestage_dir: /tmp
       dest_private_key_file: /tmp/id_rsa.tmp
@@ -210,7 +210,7 @@ settings:
     vm_network_default_mode: 'private_network'
     vm_usable_port_range_start: 2200
     vm_usable_port_range_end: 10000
-    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'].strip() || '.vagrant' %>
+    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'] || '.vagrant' %>
     basedir:
       posix: '<%= Dir.pwd %>'
       windows: '/vagrant'

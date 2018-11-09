@@ -110,8 +110,7 @@ unless $vagrant.commands.noexec.include?(ARGV[0])
 
     is_set = [
       ENV['VAGRANT_DOTFILE_PATH'],
-      ENV['VAGRANT_DOTFILE_PATH'] != '.vagrant/',
-      ENV['VAGRANT_DOTFILE_PATH'].include?($environment.current_context)
+      ENV['VAGRANT_DOTFILE_PATH'] != '.vagrant/'
     ].all?
     unless is_set
       $logger.error($errors.vagrant.no_env_dotfile % 

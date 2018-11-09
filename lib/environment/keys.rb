@@ -56,7 +56,7 @@ module VenvEnvironmentKeys
 
 		def inject(config, node_object, private_key_file, public_key_file, authorized_keys_file, semaphore)
 			require 'util/fso'
-			extend VenvUtilFSO			
+			extend VenvUtilFSO
 			if [private_key_file, public_key_file, authorized_keys_file].map { |_key_file|
 				File.exist?(_key_file) }.all?            
 	            $logger.info($info.environment.keys.inject % node_object['name'])

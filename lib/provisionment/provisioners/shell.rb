@@ -1,6 +1,9 @@
 module VenvProvisionersShell
 
+    require 'util/controller'     
+
 	def shell(node_object, machine=nil)
+     	@controller = VenvUtilController::Controller.new
 		# Provisioning configuration for shell scripts.
 		if node_object.key?("provisioners")
 			node_object["provisioners"].each do |provisioner|
@@ -17,7 +20,7 @@ module VenvProvisionersShell
 								sh_name = prov_obj["name"] || sh_path
 								sh_args = prov_obj["args"] || ""
 								if $managed
-				              	    @node.ssh_singleton(
+				              	    @controller.ssh_singleton(
 				              	    	node_object,
 				              	    	"#{sh_path} #{sh_args}"
 			              	    	)										
@@ -30,7 +33,7 @@ module VenvProvisionersShell
 								end
 							when prov_obj.key?("inline")
 								if $managed
-				              	    @node.ssh_singleton(
+				              	    @controller.ssh_singleton(
 			              	    		node_object,
 			              	    		prov_obj["inline"]
 			              	    	)									
@@ -40,7 +43,7 @@ module VenvProvisionersShell
 							end
 						when String
 							if $managed
-			              	    @node.ssh_singleton(
+			              	    @controller.ssh_singleton(
 			              	    	node_object,
 			              	    	prov_obj
 		              	    	)

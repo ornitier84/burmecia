@@ -5,6 +5,7 @@ module VenvProvisionmentTasks
 	require 'provisionment/provisioners/local'
 	require 'provisionment/provisioners/puppet'
 	require 'provisionment/provisioners/shell'
+	require 'provisionment/provisioners/preflight'
 
 	class Tasks
 
@@ -12,8 +13,12 @@ module VenvProvisionmentTasks
 		include VenvProvisionersLocal
 		include VenvProvisionersPuppet
 		include VenvProvisionersShell
+		include VenvProvisionersPreflight
 
 	    def run(node_object, node_set=nil, machine=nil)
+
+	      invoke_preflight_tasks(node_object, machine)
+
 	      if node_object.dig("provisioners")
 	        node_object["provisioners"].each do |provisioner|
 	          if not provisioner.is_a?(Hash)
