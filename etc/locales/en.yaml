@@ -281,7 +281,7 @@ strings:
           - vagrant environment list to view available environments
           - vagrant environment activate {{ environment_name }} (e.g. %{env})
           Posix:
-            - export VAGRANT_DOTFILE_PATH={{ environment_name }} vagrant %{args}
+            - export VAGRANT_DOTFILE_PATH=.vagrant/{{ environment_name }} vagrant %{args}
           Windows:
-            - set VAGRANT_DOTFILE_PATH={{ environment_name }} && vagrant %{args}
+            - set VAGRANT_DOTFILE_PATH=.vagrant\\{{ environment_name }} && vagrant %{args}
         Consult the README for more information
