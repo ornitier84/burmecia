@@ -23,7 +23,7 @@ by activating the sample environment:
 
     $ vagrant environment activate contoso
     Activating vagrant environment contoso
-    Environment context file is .vagrant/.environment_context.
+    Environment context file is .vagrant/tmp/.environment_context.
 
 create your environment inventory file:
 
@@ -167,9 +167,15 @@ This repository utilizes the below software:
     - [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt) (generally if you're operating from the KVM linux hypervisor, tested on CentOS Linux)
     - [vagrant-vbguest](https://github.com/dotless-de/vagrant-vbguest) (This is for virtualbox)
 
+Troubleshooting
+-------
+
+Error_similar_to: `found unknown escape character while parsing a quoted scalar at line {{ someline }} column {{ somecolumn }}`
+Possible_cause: **You set your VAGRANT_DOTFILE_PATH environment variable as .vagrant\myenvironment which causes a failure in parsing the yaml config file**
+Possible_solution: **Escape the backslash in your path as follows: set VAGRANT_DOTFILE_PATH=.vagrant\\myenvironment**
+
 License
 -------
 
 ``vagrant-venv`` is licensed under `MIT License <https://opensource.org/licenses/MIT>`__. You can find the
 complete text in ``LICENSE``.
-
