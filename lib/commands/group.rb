@@ -68,6 +68,10 @@ when ARGV[1] == "destroy"
   env.activate(group_environment)
   machine_targets = get_machines(group_environment, machine_group)
   cli.run_cmd("vagrant destroy #{machine_targets.join(' ')} --force")
+when ARGV[1] == "halt"
+  env.activate(group_environment)
+  machine_targets = get_machines(group_environment, machine_group)
+  cli.run_cmd("vagrant halt #{machine_targets.join(' ')}")
 when ARGV[1] == "reload"
   env.activate(group_environment)
   $logger.info($info.commands.group.reload % { group:machine_group, environment: group_environment })
