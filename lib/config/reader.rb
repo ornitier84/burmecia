@@ -5,12 +5,16 @@ require 'vagrant/ui'
 require 'yaml'
 # Load custom modules
 require 'util/yaml'
-# Load main config
-vagrant_config_file = File.expand_path('etc/config.yaml', $_VAGRANT_PROJECT_ROOT)
-vagrant_locale_file = File.expand_path('etc/locales/en.yaml', $_VAGRANT_PROJECT_ROOT)
 # Initialize config loader
 config = YAMLTasks.new
-# Load language locale, initialize variables in global scope
-config.parse(vagrant_locale_file, 'strings')
+# Load project settings
+vagrant_settings_dir = File.expand_path('etc/settings', $_VAGRANT_PROJECT_ROOT)
 # Load config, initialize variables in global scope
-config.parse(vagrant_config_file, 'settings')
+Dir.glob("#{vagrant_settings_dir}/**/*.yaml").each do |config_file|
+	config.parse(config_file, 'settings')
+end
+# Load language locale, initialize variables in global scope
+vagrant_locale_dir = File.expand_path("etc/locales/#{$project.locale}", $_VAGRANT_PROJECT_ROOT)
+Dir.glob("#{vagrant_locale_dir}/**/*.yaml").each do |locale_file|
+	config.parse(locale_file, 'strings')
+end

@@ -1,0 +1,7 @@
+---
+strings:
+  debugging:
+    commands:
+      group:
+        up: |-
+          Machine targets for group %{group} under environment %{environment}: %{machines}

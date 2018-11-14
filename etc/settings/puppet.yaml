@@ -1,0 +1,10 @@
+---
+settings:
+  puppet:
+    basedir: provisioners/puppet
+  starttime: <%= Time.now %>
+  testing:
+    ternary: "<%= defined?(%{somevar}) ? :'ternary - true' : :'ternary - false' %>"
+  user:
+    homedir: "<%= File.expand_path('~') %>"
+    name: "<%= ENV['USER'] || ENV['USERNAME'] %>"

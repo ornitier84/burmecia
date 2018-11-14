@@ -13,7 +13,7 @@ opt_parser = OptionParser.new do |opt|
 end
 opt_parser.parse!
 if ARGV.length == 3
-  semaphore_file = ".vagrant/.#{ARGV[-2]}"
+  semaphore_file = ".vagrant/tmp/.#{ARGV[-2]}"
   case ARGV[-1]
   when "on"
 

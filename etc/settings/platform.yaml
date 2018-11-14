@@ -1,0 +1,6 @@
+---
+settings:
+  platform:
+    is_windows: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil %>
+    is_osx: <%= (/darwin/ =~ RUBY_PLATFORM) != nil %>
+    is_linux: <%= (/linux/ =~ RUBY_PLATFORM) != nil %>

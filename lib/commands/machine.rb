@@ -52,7 +52,7 @@ options.dig(:name)
   group.create(machine_group, machine_environment)
   machine_environment_path = "#{$environment.basedir}/#{machine_environment}"
   machine_group_path = "#{machine_environment_path}/#{$environment.nodesdir}/#{machine_group}"
-  machine_yaml = YAML.load(ERB.new(File.read($vagrant.templates.node)).result(binding)).to_yaml(line_width: -1)
+  machine_yaml = YAML.load(ERB.new(File.read($vagrant.templates.machine)).result(binding)).to_yaml(line_width: -1)
   machine_yaml_file = "#{machine_group_path}/#{@machine_name}.yaml"
   $logger.info($info.commands.node.create % machine_yaml_file)
   puts 'Done!' if fso_write(machine_yaml_file, machine_yaml)

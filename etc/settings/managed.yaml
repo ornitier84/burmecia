@@ -1,0 +1,11 @@
+---
+settings:
+  managed_nodes:
+    posix:
+      required_key: ssh
+      required_properties:
+        - port
+    windows:
+      required_key: winrm
+      required_properties:
+        - port

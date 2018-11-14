@@ -1,0 +1,124 @@
+---
+strings:
+  errors:
+    commands:
+      group:
+        noenv: |-
+          <<[o_o]>> You must specify an environment
+      project:
+        no_path_detected: |-
+          No vagrant paths detected in your PATH variable
+          Perhaps vagrant is not installed or you installed it to a nonstandard location ...
+          If it is installed, try adjusting the path_patterns setting in your config.yaml
+    debug:
+      nopry: |-
+        I couldn't import the 'pry' modules for debugging
+        If these are not installed, try installing with:
+          vagrant plugin install rb-readline
+          vagrant plugin install pry-rescue
+          vagrant plugin install pry-byebug
+          vagrant plugin install pry-stack_explorer
+    fso:
+      operations:
+        failure: |-
+          There was a general failure in the attempt of this filesystem operation
+          Error was: %s
+    group:
+      not_found: |-
+        The specified group '%s' was not found in your environment
+    inventory:
+      file:
+        error: |-
+          Error in writing inventory file
+          Error: %s
+          Excerpt from backtrace: %s
+      path:
+        notfound: |-
+          The environment you specified has no environment directory: %s
+    environment:
+      config: |-
+        There was an error in parsing the specified environment config %s
+        Error was %s
+      path:
+        notfound: |-
+          Not activating %{env}, as the environment path %{envp} was not found.
+          Activate an existing environment instead, e.g.
+          vagrant activate %{env}
+    definition:
+      yaml_syntax: |-
+        %s fails yaml syntax check
+      nobox: |-
+        You didn't speficy a vagrant box in node definition %s
+        Which either means you intend for the node to be of managed node type or
+        you simply forgot to include a box specification.
+        Consult the 'Usage' section in the README or review the node definition template 
+        Under the 'examples' directory
+      provider:
+        syntax: |-
+          Encountered an error during initialization of provider options, error was %s
+    managed:
+      not_reachable: |-
+        The specified managed node is not reachable and/or not accepting requests for management: %s
+        Perhaps the node is not powered on?
+      checks_fail: |-
+        The vagrant deployment for managed node %s will fail, 
+        as it does not pass all requisite preflight checks 
+      ssh_privatekey_notfound: |-
+        Skipping managed node %s, 
+        as I could not find the ssh private key being referenced %s
+      missingkey: |-
+        The node definition for %s is missing the following key(s):
+      missingkeys: |-
+         - %s        
+    provisioners:
+      local:
+        failed: |-
+          Local command execution failed with error: %s
+      ansible:
+        surrogate:
+          not_reachable: |-
+            Windows platform detected. 
+            As such, the project configuration designates a surrogate through which ansible is to be invoked.
+            However, this host is not available, not reachable, and/or not accepting requests for interaction: %{machine}
+            If the machine is not powered on or created, try running `vagrant up %{machine}`
+    res: |-
+      Could not reliably determine the hardware spec: %s
+    singleton:
+      ssh:
+        failed: |-
+          Remote ssh command execution failed with error: %s    
+    exec: |-
+      Something went wrong in executing the command you specified: %s
+    generic: |-
+      Something went terribly wrong
+      Try calling the the same command, but this time, precede it with the 'debug' keyword
+    loaderror: |-
+      There was a problem loading at least one required library
+      You may experience unexpected results!
+      Error was: %s
+      For the full backtrace, set the debug option in config.yaml to 'true'
+    unhandled: |-
+      I encountered an unhandled exception
+      Error Message: %{errmessage}
+      First Line of Backtrace: %{firstline}
+      Full Backtrace: %{backtrace}
+
+      Try enabling debugging via
+      vagrant option debug on
+    vagrant:
+      multiple_providers: |-
+        Abort! Detected more than one virtualization provider!
+        This project only supports one.
+      no_env_dotfile: |-
+        <<[x_x]>>
+        Vagrant has been instructed to separate dotfile paths
+        Invalid VAGRANT_DOTFILE_PATH environmental variable
+        Here's how to fix this error:
+        Run:
+          - vagrant environment list to view available environments
+          - vagrant environment activate {{ environment_name }} (e.g. %{env})
+          Posix:
+            - export VAGRANT_DOTFILE_PATH=.vagrant/{{ environment_name }} vagrant %{args}
+          Windows:
+            - set VAGRANT_DOTFILE_PATH=.vagrant\\{{ environment_name }} && vagrant %{args}
+        Consult the README for more information

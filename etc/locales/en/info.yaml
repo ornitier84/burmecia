@@ -1,0 +1,97 @@
+---
+strings:
+  info:
+    boot:
+      up: |-
+        Bringing up %s
+    boot_destroy: |-
+      Destroying %s!
+    boot_halt: |-
+      Halting %s!
+    boot_completed: |-
+      Machine booted and ready!
+    commands:
+      environment:
+        args: 
+          list: 
+            listing: |-
+              Listing active environments
+            active: |-
+              Currently active environment is %s
+      group:
+        create: |-
+          Creating group %{group} under environment %{environment}
+        reload: |-
+          Reloading node group %{group} under environment %{environment}
+        status: |-
+          Reporting status for node group %{group} under environment %{environment}
+        up: |-
+          Bringing up node group %{group} under environment %{environment}!
+      node:
+        create: |-
+          Writing node definition file %s
+    completion:
+      done: |-
+        Done!
+    environment:
+      config:
+        init: |-
+          Initializing config for environment %s
+      keys:
+        init: |-
+          Initializing environment keys for environment %s
+        inject: |-
+          Injecting environment keys into node %s
+      activate: |-
+        Activating vagrant environment %s
+        Environment context file is %s.
+    generic:
+      message: |-
+        Generic Message: %s
+    group:
+      up: |-
+        Bringing up node group %s
+    inventory:
+      file:
+        write: |-
+          Writing inventory file %s
+    machine:
+      linked: 
+        up: |-
+          Processing linked machines for %{machine}
+    managed:
+      provisioners:
+        ansible:
+          invoke: |-
+            Running ansible via %s
+      status:
+        header: |
+          Current managed machine states:
+          
+    no_provisioners: |-
+      No provisioners specified in node yaml for host %s
+    provisioners:
+      hosts: |-
+        Adding %s %s to /etc/hosts on machine %s
+      local:
+        inline: |-
+          Running local command: %s
+        w_args: |-
+          Running local script %s with args %s
+        ok: |-
+          Local command execution was successful, output was: %s
+      ansible:
+        controller: |-
+          Ansible provisioner is in 'controller' mode. 
+          Ansible actions will executed via %{ansible_surrogate}
+          Machine targets: 
+          %{machines}
+    singleton:
+      ssh:
+        command: |-
+          Running ssh process as follows: %s
+        ok: |-
+          Remote ssh command execution was successful, output was: %s
+    time:
+      elapsed: |-
+        vagrant command took %s seconds to complete

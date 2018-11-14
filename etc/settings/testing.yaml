@@ -1,0 +1,4 @@
+---
+settings:
+  testing:
+    ternary: "<%= defined?(%{somevar}) ? :'ternary - true' : :'ternary - false' %>"

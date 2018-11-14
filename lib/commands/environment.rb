@@ -46,6 +46,7 @@ when "init"
   # Initialize environment keys
   environment_context = ARGV.last
   puts 'Done!' if env.initialize_keys(environment_context)  
+  puts 'Done!' if env.initialize_config(environment_context) 
 when "list"
   $logger.info($info.commands.environment.args.list.listing)
   Dir.glob("#{$environment.basedir}/*").select {

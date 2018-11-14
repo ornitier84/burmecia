@@ -41,8 +41,7 @@ module VenvUtilFSO
     # Do I need to check for the 
     # parent folder or the file itself?
     _file_parent_dir = File.dirname(_file)
-
-    if !File.exist?(File.dirname(_file_parent_dir))
+    unless File.exist?(_file_parent_dir)
       $logger.warn($warnings.fso.not_found %  _file_parent_dir)
       return false
     else

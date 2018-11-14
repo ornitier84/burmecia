@@ -1,0 +1,22 @@
+---
+settings:
+  project:
+    editor: 
+      path: "C:\\progra~1\\SUBLIM~1\\subl.exe"
+      options: "-a"
+    ssh:
+      path: "C:\\Users\\etejeda\\Desktop\\tools\\c\\cmder\\vendor\\git-for-windows\\usr\\bin\\ssh.exe"
+    is_vagrant: "<%= defined?(%{Vagrant}) ? :'true' : :'false' %>"
+    locale: en
+    project_path: "<%= File.expand_path('.', Dir.pwd) %>"
+    requirements:
+      plugins:
+        mandatory:
+          - vagrant-hosts # Manages static DNS on vagrant guests
+        libvirt:
+          - vagrant-hostsupdater # Adds an entry to your /etc/hosts file on the host system
+          - vagrant-libvirt
+        virtualbox:
+          - vagrant-disksize
+          - vagrant-hostsupdater
+          - vagrant-vbguest

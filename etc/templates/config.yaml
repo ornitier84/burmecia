@@ -1,0 +1,11 @@
+---
+settings:
+  ansible:
+    options:
+      global:
+        config_file: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg
+  vagrant:
+    ssh:
+      private_key_path:
+        - 'etc/sshkeys/insecure'       
+        - 'environments/<%= @environment_context %>/<%= $environment.keys.keysdir %>/<%= @environment_context %>'

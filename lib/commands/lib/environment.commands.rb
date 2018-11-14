@@ -1,11 +1,13 @@
 module VenvCommandsEnvironment
 
   require 'environment/context'
+  require 'environment/config'
   require 'environment/keys'
   
   class Commands
 
     include VenvEnvironmentContext
+    include VenvEnvironmentConfig
     include VenvEnvironmentKeys
   
     def activate(environment)

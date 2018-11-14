@@ -11,11 +11,12 @@ require 'config/settings'
 require 'environment/main'
 require 'machine/controller'
 require 'commands/lib/environment.commands'
+require 'project/preflight'
 if $debug
   begin
     require 'pry'
     require 'pry-rescue'
-  rescue exception => e
+  rescue Exception => e
     $logger.error($errors.debug.nopry)
     $debug = false
   end
@@ -98,7 +99,7 @@ def main
         if ["destroy", "halt", "port", "provision", "reload", "status", "up"].include?(ARGV[0])
           endtime = Time.now
           t = endtime - DateTime.parse($starttime).to_time
-          $logger.info($info.time.elapsed % t)  
+          $logger.info($info.time.elapsed % t)
         end
   }
 end

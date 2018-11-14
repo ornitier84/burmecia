@@ -1,0 +1,5 @@
+---
+settings:
+  user:
+    homedir: "<%= File.expand_path('~') %>"
+    name: "<%= ENV['USER'] || ENV['USERNAME'] %>"

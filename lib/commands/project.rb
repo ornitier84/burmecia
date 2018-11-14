@@ -1,12 +1,16 @@
 # Manage project
 
 # Load custom libraries
+require 'commands/lib/environment.commands'
+require 'project/requirements'
 require 'util/controller'
 require 'util/prompt'
 require 'util/yaml'
-require 'commands/lib/environment.commands'
 cli = VenvUtilController::Controller.new
+# Instantiate vagrant commands class for environment tasks
 env = VenvCommandsEnvironment::Commands.new
+# Instantiate vagrant environment main class for contextual tasks
+@context = VenvEnvironment::Main.new
 
 options = {}
 opt_parser = OptionParser.new do |opt|
@@ -34,27 +38,24 @@ case ARGV[1]
   when "setup"
     # Load main config
     config = YAMLTasks.new
-    config.parse('etc/config.yaml', 'settings') 
+    config.parse('etc/config.yaml', 'settings')
+    current_context = env.get
+    @context.join(current_context)
     ## Required plugins
-    required_plugins = $project.requirements.plugins.mandatory
-    if $platform.is_linux
-      required_plugins += $project.requirements.plugins.libvirt
-    elsif [$platform.is_windows,$platform.is_osx].any?
-      required_plugins += $project.requirements.plugins.virtualbox
-    end
-    if not required_plugins.empty?
-      required_plugins.each do |plugin|
-        puts "Run `vagrant plugin install #{plugin}`"
-        # process = Vagrant::Util::Subprocess.execute(
-        #   "vagrant",
-        #   "plugin", 
-        #   "install",
-        #    plugin
-        #   )
-        # puts process.stdout if process.stdout        
-        # puts process.stderr if process.stderr        
+    missing_plugins = VenvProjectRequirements::VenvPlugins.check_plugins
+    if $platform.is_windows and !missing_plugins.empty?
+      vagrant_path_patterns = Regexp.union($vagrant.commands.project.path_patterns)
+      vagrant_paths = ENV['PATH'].split(';').select { |p| p.match(vagrant_path_patterns) }
+      if vagrant_paths
+        ENV['PATH'] = vagrant_paths.join(';')
+      else
+        $logger.error($errors.commands.project.no_path_detected)
+        abort
       end
-    end     
+    end    
+    missing_plugins.each do |plugin|
+      system("vagrant plugin install #{plugin}")
+    end
   when "shutdown"
     # Shutdown and (if applicable) delete all machines in current environment
     prompt = VenvUtilPrompt::Prompt.new

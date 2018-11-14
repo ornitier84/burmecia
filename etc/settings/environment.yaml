@@ -1,0 +1,57 @@
+---
+settings:
+  environment:
+    basedir: environments
+    nodesdir: machines
+    keys:
+      inject_keys: true
+      keysdir: '.keys'
+      prestage_dir: /tmp
+      dest_private_key_file: /tmp/id_rsa.tmp
+      dest_public_key_file: /tmp/id_rsa.pub.tmp
+      dest_authorized_keys_file: /tmp/authorized_keys.tmp
+      post_commands: |-
+        cp -f /tmp/id_rsa.tmp /home/vagrant/.ssh/id_rsa
+        cp -f /tmp/id_rsa.pub.tmp /home/vagrant/.ssh/id_rsa.pub
+        cp -f /tmp/authorized_keys.tmp /home/vagrant/.ssh/authorized_keys
+        chown vagrant:vagrant /home/vagrant/.ssh/*
+        chmod 400 /home/vagrant/.ssh/id_rsa*
+    context_file: .vagrant/tmp/.environment_context
+    current_context: <%= File.read('.vagrant/tmp/.environment_context') if File.exist?('.vagrant/tmp/.environment_context') rescue 'NOCONTEXT' %>
+    defaults: 
+      context: contoso
+    node:
+      definitions:
+        exclude_paths: 
+          - playbooks
+          - roles
+          - group_vars
+          - host_vars
+          - templates
+          - files
+        include_files: .*.\.yaml
+        exclude_files:
+          - inventory.yaml
+          - inventory.yml
+      provisioners:
+          env_hash:
+            - node_definition_path
+            - name
+    skeleton:
+      - group_vars/all
+      - host_vars
+      - machines
+      - templates
+    sizing:
+      small:
+        memory: 512
+        cpus: 1
+      medium:
+        memory: 1024
+        cpus: 1
+      large:    
+        memory: 2048
+        cpus: 2
+      xlarge:    
+        memory: 4096
+        cpus: 4

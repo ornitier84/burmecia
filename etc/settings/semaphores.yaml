@@ -1,0 +1,6 @@
+---
+settings:
+  semaphores:
+    debug: ".vagrant/tmp/.debug"
+    verbose: ".vagrant/tmp/.verbose"
+    keys_provisioned: ".keys_provisioned"

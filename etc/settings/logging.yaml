@@ -1,0 +1,6 @@
+---
+settings:
+  logging:
+    debug: false
+    verbose: false
+    logs_dir: <%= ENV['VAGRANT_DOTFILE_PATH'].gsub('\\', '/') rescue '.vagrant' %>/var/log

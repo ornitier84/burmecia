@@ -1,0 +1,84 @@
+---
+settings:
+  vagrant:
+    api_version: 2
+    require_version: ">= 2.1.0"
+    tmpdir: ".vagrant/tmp"
+    separate_dotfile_paths: false
+    commands:
+      noexec: <%= Dir.glob("lib/commands/*.rb").map { |file| File.basename(file, ".rb") } %>
+      adhoc: 
+        files: lib/commands/*.rb
+      timeout: 60
+      project:
+        path_patterns:
+          - HashiCorp
+    defaults:
+      autostart: true
+      config:
+        boot_timeout: 300
+      nodes:
+        keys:
+          box: 'ubuntu/xenial64'
+          desktop: false
+          provision: true
+          natdnshostresolver1: "'on'"
+          VBoxInternal2:
+            SharedFoldersEnableSymlinksCreate:
+              v_root: 1
+        size: medium
+    default_provider: 'virtualbox'
+    templates:
+      machine: etc/templates/machine.yaml
+      config: etc/templates/config.yaml
+    provider_order: 
+      - 'libvirt'
+      - 'virtualbox'
+    is_true: true
+    box_download_insecure: true
+    ssh:
+      private_key_path:
+        - 'etc/sshkeys/insecure'
+      insert_key: false
+      username: vagrant
+    use_nfs: false
+    synced_folder:
+      defaults:
+        vagrant_target: /vagrant
+        create: false
+        owner: vagrant
+        group: vagrant
+        disabled: false
+        nfs:
+          udp: true
+          version: 3
+          mount_options:
+            - rw
+            - no_subtree_check
+            - all_squash
+            - async
+        rsync:
+          args: 
+            - '--verbose'
+            - '--archive'
+            - '--delete'
+            - '-z'
+          auto: true
+          exclude: 
+            - '.vagrant/'
+        smb:
+          mount_options: []
+    no_mount_vagrant: false
+    # disable nfs for windows vhosts (for now)
+    # see https://github.com/winnfsd/vagrant-winnfsd/issues/53
+    vm_network_default_mode: 'private_network'
+    vm_usable_port_range_start: 2200
+    vm_usable_port_range_end: 10000
+    local_data_dir: <%= ENV['VAGRANT_DOTFILE_PATH'].gsub('\\', '/') rescue '.vagrant' %>
+    basedir:
+      posix: '<%= Dir.pwd %>'
+      windows: '/vagrant'
+    vcpu_minimum: 1
+    vmem_minimum: 512
+    vcpu_allocation_ratio: 1
+    vmem_allocation_ratio: 1
