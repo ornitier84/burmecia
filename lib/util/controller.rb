@@ -65,7 +65,7 @@ module VenvUtilController
 
     def ssh_singleton(node_object, args='')
         #TODO Dedupe this block
-        if $managed and node_object['name'] != $ansible.surrogate
+        if $managed and node_object['name'] != $ansible.controller
         	ssh_options =
         	if node_object['ssh'].key?('extra_args')
 				node_object['ssh']['extra_args'].map { |k| "-o #{k}" }.join (' ')

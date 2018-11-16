@@ -42,11 +42,16 @@ when "create"
     puts dirobj
     fso_mkdir(dirobj)
   end  
-when "init"
+when "initialize"
   # Initialize environment keys
   environment_context = ARGV.last
-  puts 'Done!' if env.initialize_keys(environment_context)  
-  puts 'Done!' if env.initialize_config(environment_context) 
+  environment_path = "#{$environment.basedir}/#{environment_context}"
+  if env.initialize_config(environment_context) and env.initialize_keys(environment_context)
+    fso_write("#{environment_path}/#{$semaphores.environment.initialized}", "true")
+    puts 'Done!'
+  else
+    puts "I encountered a problem initializing environment #{environment_context}"
+  end
 when "list"
   $logger.info($info.commands.environment.args.list.listing)
   Dir.glob("#{$environment.basedir}/*").select {

@@ -1,5 +1,4 @@
-Introduction
------------------
+# Introduction
 
 What is vagrant-venv?
 
@@ -12,61 +11,74 @@ What is vagrant-venv?
 In a nutshell, what you've got here is a portable virtual infrastructure 
 leveraging vagrant for machine deployments and ansible/puppet for machine provisionment.
 
-Quick start
------------------
+# Quick start
 
-Once you've `installed
-<https://www.vagrantup.com/docs/installation/>`__ vagrant, start
-by activating the sample environment:
+Once you've installed [vagrant](https://www.vagrantup.com/docs/installation/), do as follows:
 
-.. code-block:: console
+Activate the sample environment:
 
+```bash
     $ vagrant environment activate contoso
     Activating vagrant environment contoso
     Environment context file is .vagrant/tmp/.environment_context.
+```
 
-create your environment inventory file:
+Initialize the environment inventory file:
+```bash
+    $ vagrant Initialize contoso
+    Initializing config for environment contoso
+    Initializing environment keys for environment contoso
+    Done!    
+```
 
-.. code-block:: console
+Create the environment inventory file:
 
+```bash
     $ vagrant inventory create contoso
     Writing inventory file environments/contoso/inventory.yaml
     Done!    
+```
 
-Next, review your machine states:
+Last, review your machine states:
 
-.. code-block:: console
+```bash
 
     $ vagrant status
     Current machine states:
 
     ansible.contoso.com       not created (virtualbox)
     web01.contoso.com         not created (virtualbox)    
+```
 
 Start the your virtual machines:
 
-.. code-block:: console
-
+```bash
     $ vagrant up
     Bringing machine 'ansible.contoso.com' up with 'virtualbox' provider...
     Bringing machine 'web01.contoso.com' up with 'virtualbox' provider...
+```
+
+# Common tasks
 
 - SSH into a virtual machine
-  - `vagrant ssh {{ MACHINE_NAME }}`
+  - `vagrant ssh {{ MACHINE_NAME }}`<br />
+  e.g. `vagrant ssh ansible.contoso.com`
 - Power Off a virtual machine
   - `vagrant halt {{ MACHINE_NAME }}`
 - Apply provisionment steps (ansible) against virtual machine
-  - `vagrant provision {{ MACHINE_NAME }}`
+  - `vagrant provision {{ MACHINE_NAME }}`<br />
+  e.g. `vagrant provision web01.contoso.com ansible.contoso.com`
 
-You can `ssh` to any of the machines with `vagrant ssh {{ MACHINE_NAME }}` 
-e.g. `vagrant ssh ansible.contoso.com`
 
-To apply provisionment steps to a machine, simply run `vagrant provision {{ MACHINE_NAME }} {{ ANSIBLE_CONTROLLER_NAME }}`, e.g.
-`vagrant provision web01.contoso.com ansible.contoso.com`
+**Note:** The order of machine names matters when the _ansible_ operational mode is set to 'controller', which is the project default.
 
-**Note:** The above is necessary when the _ansible_ operational mode is set to 'controller', which is the project default.
+As such, the ansible controller node for the environment in question must always be specified last.
 
-For more detailed information on provisioner logic, consult [docs/provisioners.md](docs/provisioners.md)
+In such a call, any ansible tasks will not execute against the ansible controller itself.
+
+To invoke ansible tasks against the ansible controller, simply call vagrant provision with the controller name, as with: `vagrant provision ansible.contoso.com`
+
+For more detailed information on the project's provisioner logic, consult [docs/provisioners.md](docs/provisioners.md)
 
 For more usage examples, read [docs/usage.md](docs/usage.md)
 
@@ -88,8 +100,8 @@ environments
 | | | |____all
 | | | | |____vars.yaml
 | | |____host_vars
-| | | |____ubuntu01.yaml
-| | | |____ubuntu02.yaml
+| | | |ansible.contoso.com.yaml
+| | | |web01.contoso.com.yaml
 | | |____inventory.yaml
 | | |____machines
 | | | |____ansible-controllers
@@ -108,50 +120,59 @@ Note above that machine definitions are simply [YAML](http://yaml.org/) files.
 Machine Definitions
 -----------------
 
-A machine definition consists of yaml-formatted text file with at minimum the following structure:
+A machine definition consists of a yaml-formatted text file with at minimum the following structure:
 
-.. code-block:: yaml
+```yaml
+---
 - name: '<%= @machine_name %>'
   config:
     box: '<%= @machine_box %>'
     hostname: '<%= @machine_name %>'
+    boot_timeout: <%= @boot_timeout %>
+  desktop: <%= $vagrant.defaults.nodes.keys.desktop %>
+  provision: <%= $vagrant.defaults.nodes.keys.provision %>
   provider:
     virtualbox:
       modifyvm:
         name: '<%= @machine_name %>'
-        memory: 512
-        cpus: 1
+        natdnshostresolver1: <%= $vagrant.defaults.nodes.keys.natdnshostresolver1 %>
+        memory: <%= $environment.sizing[@machine_size].memory %>
+        cpus: <%= $environment.sizing[@machine_size].cpus %>
+      setextradata:
+        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: <%= $vagrant.defaults.nodes.keys.VBoxInternal2.SharedFoldersEnableSymlinksCreate.v_root %>
+```
 
-Notice the dynamic values: ``'<%= @machine_name %>'``; these are placeholders that evaluate to the result computed between the `<%= %>`, which is the base name of the yaml file.
+Notice the dynamic values encased in `<%= %>`.
 
-In this case, the machine name reflects the file name of its machine definition file.
+This is embedded ruby, and is evaluated as per ERB syntax.
 
-You can, of course, hardcode the machine name in its definition file if you like.
+For example, `'<%= @machine_name %>'` ultimately evaluates to intended name of the virtual machine.
 
 For a full list of supported keys, consult [docs/machines.md](docs/machines.md)
 
-Provisioners
------------------
+See below for more information on Embedded Ruby (ERB):
+  
+  - [ERB – Ruby Templating](https://ruby-doc.org/stdlib-2.5.3/libdoc/erb/rdoc/ERB.html)
+  - [An Introduction to ERB Templating](https://www.stuartellis.name/articles/erb/)
+
+# Provisioners
 
 The project supports the following vagrant provisioners:
 
 - ansible
+- local
 - puppet
 - shell
 
 For more detailed information on provisioner logic, consult [docs/provisioners.md](docs/provisioners.md)
 
-Appendix
------------------
+# Appendix
 
-
-Project Settings
--------
+## Project Settings
 
 All project-specific settings are also defined via YAML/ERB: [etc/config.yaml](etc/config.yaml)
 
-Softwares
--------
+## Softwares
 
 This repository utilizes the below software:
 
@@ -167,15 +188,13 @@ This repository utilizes the below software:
     - [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt) (generally if you're operating from the KVM linux hypervisor, tested on CentOS Linux)
     - [vagrant-vbguest](https://github.com/dotless-de/vagrant-vbguest) (This is for virtualbox)
 
-Troubleshooting
--------
+## Troubleshooting
 
 Error_similar_to: `found unknown escape character while parsing a quoted scalar at line {{ someline }} column {{ somecolumn }}`
 Possible_cause: **You set your VAGRANT_DOTFILE_PATH environment variable as .vagrant\myenvironment which causes a failure in parsing the yaml config file**
 Possible_solution: **Escape the backslash in your path as follows: set VAGRANT_DOTFILE_PATH=.vagrant\\myenvironment**
 
-License
--------
+## License
 
 ``vagrant-venv`` is licensed under `MIT License <https://opensource.org/licenses/MIT>`__. You can find the
 complete text in ``LICENSE``.

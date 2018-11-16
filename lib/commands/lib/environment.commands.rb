@@ -19,7 +19,7 @@ module VenvCommandsEnvironment
         $logger.error($errors.environment.path.notfound %  {env: environment,
           envp: environment_path, cf: $environment.context_file, 
           denv: $environment.defaults.context })
-        abort
+        return ''
       else
         File.open($environment.context_file,"w") do |file|
           file.write environment

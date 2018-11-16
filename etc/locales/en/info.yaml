@@ -83,7 +83,7 @@ strings:
       ansible:
         controller: |-
           Ansible provisioner is in 'controller' mode. 
-          Ansible actions will executed via %{ansible_surrogate}
+          Ansible actions will executed via %{ansible_controller}
           Machine targets: 
           %{machines}
     singleton:

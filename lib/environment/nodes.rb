@@ -15,8 +15,9 @@ module VenvEnvironmentNodes
     exclude_paths = Regexp.union($environment.node.definitions.exclude_paths)
     exclude_files = Regexp.union($environment.node.definitions.exclude_files)
     include_files = Regexp.new($environment.node.definitions.include_files)
-    if !File.exist?(environment_path_parent)
-      $logger.error($errors.environment.path.notfound % environment_path_parent) if $logger
+    unless File.exist?(environment_path)
+      $logger.error($errors.environment.path.notfound % { env: environment_context, envp:environment_path }) if $logger
+      return []
     end
     if $list_hosts_only
       # Read node yaml definitions
@@ -91,7 +92,7 @@ module VenvEnvironmentNodes
         # Populate is_created property
         node_definition['is_created'] = File.exist?("#{node_definition['machine_dir']}/id")
         # Populate keys_provisioned property
-        node_definition['keys_provisioned'] = File.exist?("#{node_definition['machine_dir']}/#{$semaphores.keys_provisioned}")
+        node_definition['keys_provisioned'] = File.exist?("#{node_definition['machine_dir']}/#{$semaphores.machine.keys_provisioned}")
         # Populate is_provisioned property
         node_definition['is_provisioned'] = File.exist?("#{node_definition['machine_dir']}/action_provision")
         # intermediary variable node_name
@@ -134,14 +135,14 @@ module VenvEnvironmentNodes
       if [
         [!$node_subset.nil?, !$node_subset.empty?].all?,
         [$managed, $ansible.mode == 'controller'].any?,
-        ARGV.include?($ansible.surrogate)
+        ARGV.include?($ansible.controller)
         ].all?
         # TODO
-        # Dedupe derivation of ansible_surrogate_object, as it already occurs in cli.rb
-        ansible_surrogate_object = $node_subset.select { |k, v| k['name'] == $ansible.surrogate}.first
-        if ansible_surrogate_object.nil?
-          ansible_surrogate_object = node_set.select { |k, v| k['name'] == $ansible.surrogate}.first
-          return $node_subset.push(ansible_surrogate_object)       
+        # Dedupe derivation of ansible_controller_object, as it already occurs in cli.rb
+        ansible_controller_object = $node_subset.select { |k, v| k['name'] == $ansible.controller}.first
+        if ansible_controller_object.nil?
+          ansible_controller_object = node_set.select { |k, v| k['name'] == $ansible.controller}.first
+          return $node_subset.push(ansible_controller_object)       
         else
           return $node_subset
         end

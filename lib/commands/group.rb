@@ -82,8 +82,8 @@ when ARGV[1] == "provision"
   # $logger.info($info.commands.group.provision % { group:machine_group, environment: group_environment })
   @context.join(group_environment)
   machine_targets = get_machines(group_environment, machine_group)
-  surrogate_index = machine_targets.index{ |s| s == $ansible.surrogate }
-  machine_targets.insert(-1, machine_targets.delete_at(surrogate_index))
+  controller_index = machine_targets.index{ |s| s == $ansible.controller }
+  machine_targets.insert(-1, machine_targets.delete_at(controller_index))
   cli.run_cmd("vagrant provision #{machine_targets.join(' ')}")
 when ARGV[1] == "status"
   env.activate(group_environment)

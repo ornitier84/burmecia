@@ -6,6 +6,10 @@ strings:
         activate_default: |-
           <<[o_o]>> I couldn't determine the currently active environment context
           Using default: %s
+          Don't forget to activate your environment before working in that context.
+          To get a list of available environments, run vagrant environment list
+          Then run vagrant environment activate ENVIRONMENT_NAME to activate the desired context.
+          Lastly, please review etc/settings/environment.yaml to verify the default environment is correct.
         no_active: |-
           You have not activated a vagrant environment.
           Please do so via `vagrant environment activate ENVIRONMENT_NAME`
@@ -39,9 +43,9 @@ strings:
           skipping: |-
             Because the Ansible provisioner is in 'controller' mode, we
             are skipping ansible provisionment.
-            You must call the provision action ensuring the ansible surrogate hostname
+            You must call the provision action ensuring the ansible controller hostname
             is specified last, as with:
-            vagrant provision %{machine} %{surrogate}          
+            vagrant provision %{machine} %{controller}          
           nodes:
             not_created: |-
               Ansible provisioner is in 'controller' mode and the node %{machine} is not yet created.

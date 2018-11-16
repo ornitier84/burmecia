@@ -45,9 +45,9 @@ def main
   if [
     $ansible.mode == 'controller',
     $vagrant_args.first == 'provision',
-    $vagrant_args.last != $ansible.surrogate].all?
+    $vagrant_args.last != $ansible.controller].all?
     $logger.warn($warnings.provisioners.ansible.controller.skipping % {
-      machine: '{{ node_name }}', surrogate: $ansible.surrogate 
+      machine: '{{ node_name }}', controller: $ansible.controller 
     }
     )
   end

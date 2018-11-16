@@ -150,7 +150,7 @@ $RECYCLE.BIN/
 
 ### Vagrant ###
 .vagrant/
-
+.initialized
 # Sublime Text 3
 sftp-config.json
 

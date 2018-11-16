@@ -43,7 +43,10 @@ strings:
         notfound: |-
           Not activating %{env}, as the environment path %{envp} was not found.
           Activate an existing environment instead, e.g.
-          vagrant activate %{env}
+          vagrant activate {{ ENV_NAME }}
+      uninitialized: |-
+          You have not yet initilized the environment %{env}
+          Run `vagrant environment initialize %{env}`
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check
@@ -75,10 +78,10 @@ strings:
         failed: |-
           Local command execution failed with error: %s
       ansible:
-        surrogate:
+        controller:
           not_reachable: |-
             Windows platform detected. 
-            As such, the project configuration designates a surrogate through which ansible is to be invoked.
+            As such, the project configuration designates a controller through which ansible is to be invoked.
             However, this host is not available, not reachable, and/or not accepting requests for interaction: %{machine}
             If the machine is not powered on or created, try running `vagrant up %{machine}`
     res: |-

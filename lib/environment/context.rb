@@ -28,9 +28,14 @@ module VenvEnvironmentContext
         environment = $environment.defaults.context
       end        
       # Define environment path
-      environment_path = "#{$environment.basedir}/#{environment}"      
-      # Safeguard
-      if !File.exist?(environment_path)
+      environment_path = "#{$environment.basedir}/#{environment}"   
+      # Safeguards
+      unless File.exist?("#{environment_path}/#{$semaphores.environment.initialized}")
+        $logger.error($errors.environment.uninitialized % { env: environment })
+        return ''
+      end
+
+      unless File.exist?(environment_path)
         $logger.error($errors.environment.path.notfound % { envp: environment_path, env:environment })
         return nil
       else      

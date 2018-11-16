@@ -79,7 +79,7 @@ module VenvMachine
             private_key_file, 
             public_key_file, 
             authorized_keys_file, 
-            "#{node_object['machine_dir']}/#{$semaphores.keys_provisioned}"
+            "#{node_object['machine_dir']}/#{$semaphores.machine.keys_provisioned}"
           )
         end
         @provisionment_tasks.run(node_object, node_set, machine)

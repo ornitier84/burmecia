@@ -9,7 +9,7 @@ settings:
       playbooks:
         set: ".vagrant/tmp/.playbooks_grouped.yaml"
     mode: controller #standalone
-    surrogate: ansible-controller
+    controller: ansible-controller
     vardir: "<%= ENV['VAGRANT_DOTFILE_PATH'].gsub('\\', '/') rescue '.vagrant' %>/machines/%s/provisioners/ansible"
     default_include_statement: 'import_playbook'
     windows_helper_script: scripts/windows.ansible-playbook.sh

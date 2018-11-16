@@ -1,7 +1,7 @@
 ---
 settings:
   ansible:
-    surrogate: ansible.contoso.local
+    controller: ansible.contoso.local
     options:
       global:
         config_file: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg    

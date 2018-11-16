@@ -30,12 +30,12 @@ module VenvProvisionersAnsible
       controller_mode = [$managed, $ansible.mode == 'controller'].any?
       if controller_mode
         #####
-        if node_object['name'] == $ansible.surrogate
+        if node_object['name'] == $ansible.controller
           if $managed and !$managed_node_set.empty?
             $node_subset += $managed_node_set
           end
           if $node_subset.length > 1
-            _node_subset = $node_subset.select { |k, v| k['name'] != $ansible.surrogate }
+            _node_subset = $node_subset.select { |k, v| k['name'] != $ansible.controller }
           else
             _node_subset = $node_subset
           end
@@ -49,7 +49,7 @@ module VenvProvisionersAnsible
           if !playbooks.empty?
             $logger.info($info.provisioners.ansible.controller % { 
               machines: _node_subset.map { |s| "- #{s['name']}" }.join("\n"), 
-              ansible_surrogate: $ansible.surrogate
+              ansible_controller: $ansible.controller
               }
             )         
             @ansible_playbook = @playbook.write_set(playbooks)
@@ -67,7 +67,7 @@ module VenvProvisionersAnsible
             end
           end
         #####
-        elsif [$node_subset.length == 1, $vagrant_args.last == $ansible.surrogate].all?
+        elsif [$node_subset.length == 1, $vagrant_args.last == $ansible.controller].all?
         #####
           ansible_hash = node_object['provisioners'].select{ 
             |item| item.keys().first == 'ansible' }.first

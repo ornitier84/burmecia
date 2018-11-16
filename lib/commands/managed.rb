@@ -142,7 +142,7 @@ vagrant_args.delete_if { |arg| arg.include?('--') }
 case vagrant_args[1]
 when "provision"
   targets = vagrant_args[2]
-  cmd = "vagrant --managed-targets=#{targets} provision #{$ansible.surrogate}"
+  cmd = "vagrant --managed-targets=#{targets} provision #{$ansible.controller}"
   cli.run_cmd(cmd)
 when "status"
   # Generate the node set
@@ -191,13 +191,13 @@ when "status"
   #   return false
   # end
   # if $platform.is_windows
-  #   if ansible_surrogate.key?('managed') and !ansible_surrogate['managed'].nil?
-  #     ansible_surrogate_status = get_managed_state(ansible_surrogate)
+  #   if ansible_controller.key?('managed') and !ansible_controller['managed'].nil?
+  #     ansible_controller_status = get_managed_state(ansible_controller)
   #   else
-  #     ansible_surrogate_status = @node.status_singleton(ansible_surrogate)
+  #     ansible_controller_status = @node.status_singleton(ansible_controller)
   #   end
-  #   if ansible_surrogate_status.to_s != 'reachable'
-  #     $logger.error($errors.provisioners.ansible.surrogate.not_reachable % {machine:$ansible.surrogate})
+  #   if ansible_controller_status.to_s != 'reachable'
+  #     $logger.error($errors.provisioners.ansible.controller.not_reachable % {machine:$ansible.controller})
   #     return false
   #   end
   # end 

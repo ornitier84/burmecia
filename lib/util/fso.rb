@@ -10,6 +10,21 @@ module VenvUtilFSO
     return true      
   end
 
+  def fso_read(_src_obj)
+    if File.exist?(_src_obj)
+      begin
+        _contents = File.read(_src_obj).chomp()
+      rescue Exception => e
+        $logger.error($errors.fso.operations.failure % e)
+        return false
+      end
+    else
+      $logger.warn($warnings.fso.not_found % _src_obj) if $debug
+      return false
+    end
+    return _contents
+  end
+
   def fso_copy(_src_obj, _dest_obj)
     if File.exist?(_src_obj) and File.exist?(_dest_obj)
       begin
