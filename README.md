@@ -11,9 +11,27 @@ What is vagrant-venv?
 In a nutshell, what you've got here is a portable virtual infrastructure 
 leveraging vagrant for machine deployments and ansible/puppet for machine provisionment.
 
+# Preflight
+
+Ok, let's do a preflight check.
+
+Make sure you've installed the following applications **before** proceeding:
+
+- [vagrant](https://www.vagrantup.com/docs/installation/)
+- [virtualbox](https://www.virtualbox.org/wiki/Downloads)
+
+Although the project does work fine under Windows cmd, I choose to work in a more posix-friendly commandline environment.
+
+I suggest you install and use either of these:
+
+- [cmder](http://cmder.net) (Full package comes with Git for Windows built-in)
+- [Git for Windows](https://git-scm.com/download/win)
+
+The above will provide appropriate program shortcuts for a much better commandline session than cmd (IMO).
+
 # Quick start
 
-Once you've installed [vagrant](https://www.vagrantup.com/docs/installation/), do as follows:
+Once you've installed the [requirements](#pre_flight), do as follows:
 
 Activate the sample environment:
 
@@ -84,8 +102,7 @@ For more usage examples, read [docs/usage.md](docs/usage.md)
 
 The following sections cover the project details at greater length.
 
-The Environments
------------------
+# The Environments
 
 All production environments are defined in the environments folder.
 
@@ -117,8 +134,7 @@ environments
 
 Note above that machine definitions are simply [YAML](http://yaml.org/) files.
 
-Machine Definitions
------------------
+# Machine Definitions
 
 A machine definition consists of a yaml-formatted text file with at minimum the following structure:
 
@@ -163,6 +179,8 @@ The project supports the following vagrant provisioners:
 - local
 - puppet
 - shell
+
+How you define what provisioners are launched and in what order is done within the Machine Definition file.
 
 For more detailed information on provisioner logic, consult [docs/provisioners.md](docs/provisioners.md)
 

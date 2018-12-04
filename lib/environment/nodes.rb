@@ -148,7 +148,7 @@ module VenvEnvironmentNodes
         end
       else
         if $vagrant_args
-		      $target_all_machines = true if $vagrant_args.last == 'provision'
+          $target_all_machines = true if $vagrant_args.last == 'provision'
         end
         return node_set
       end

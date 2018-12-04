@@ -14,4 +14,20 @@
         memory: <%= $environment.sizing[@machine_size].memory %>
         cpus: <%= $environment.sizing[@machine_size].cpus %>
       setextradata:
-        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: <%= $vagrant.defaults.nodes.keys.VBoxInternal2.SharedFoldersEnableSymlinksCreate.v_root %>    
+        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: <%= $vagrant.defaults.nodes.keys.VBoxInternal2.SharedFoldersEnableSymlinksCreate.v_root %>
+  provisioners:
+    - local: |-
+        echo  %name%: Hello from local cmd!
+    - shell:
+        echo "$(hostname -f): Hello from shell!"
+    - ansible:
+        inventory: '<%= "#{@machine_environment_path}/#{$ansible.inventory.filename}" %>'
+        gather_facts: true
+        become: True
+        tasks:
+          - name: Say Hello
+            debug:
+              msg: Hello from Ansible!
+    - puppet:
+        modules: "all"
+...      

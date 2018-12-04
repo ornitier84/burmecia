@@ -46,7 +46,7 @@ strings:
           vagrant activate {{ ENV_NAME }}
       uninitialized: |-
           You have not yet initilized the environment %{env}
-          Run `vagrant environment initialize %{env}`
+          Run `vagrant environment init %{env}`
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check

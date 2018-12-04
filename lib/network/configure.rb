@@ -27,9 +27,16 @@ module VenvNetwork
               $node_set.each do |h|
                 if h.dig('interfaces')
                   h['interfaces'].each do |interface|
-                    next if [interface.key?('exclude_from_hosts'), !interface['exclude_from_hosts'].nil?].all? and interface['exclude_from_hosts'] == true
+                    next if interface.fetch('exclude_from_hosts', false)
                     $logger.info($info.provisioners.hosts % [interface['ip'], h['name'],host['name']]) if $debug 
-                    provisioner.add_host interface['ip'], [h['name']] if interface['ip'] and interface.is_a?(Hash)
+                    if interface.dig('ip') and interface.is_a?(Hash)
+                      if interface.dig('dns')
+                        aliases = interface['dns'].fetch('aliases', [])
+                      else
+                        aliases = []
+                      end
+                      provisioner.add_host interface['ip'], [h['name']] + aliases
+                    end
                   end
                 end
               end

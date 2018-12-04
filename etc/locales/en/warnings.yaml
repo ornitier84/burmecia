@@ -15,6 +15,7 @@ strings:
           Please do so via `vagrant environment activate ENVIRONMENT_NAME`
           To get a listing of available environments, run: `vagrant environment list`
           Using default: %s
+          Review etc/settings/environment.yaml to verify the default environment is correct.
       nodes:
         empty: |-
           Node set is empty. Make sure you have defined your nodes correctly,

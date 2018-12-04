@@ -3,6 +3,8 @@ settings:
   ansible:
     env:
       ansible_keep_remote_files: 0
+    inventory:
+      filename: inventory.yaml
     paths:
       basedir: provisioners/ansible
       cfg: ansible.cfg
