@@ -26,18 +26,17 @@ module VenvEnvironmentContext
       else
         $logger.warn($warnings.context.environment.no_active % $environment.defaults.context)
         environment = $environment.defaults.context
-      end        
+      end
       # Define environment path
       environment_path = "#{$environment.basedir}/#{environment}"   
       # Safeguards
       unless File.exist?("#{environment_path}/#{$semaphores.environment.initialized}")
         $logger.error($errors.environment.uninitialized % { env: environment })
-        return ''
+        exit
       end
-
       unless File.exist?(environment_path)
         $logger.error($errors.environment.path.notfound % { envp: environment_path, env:environment })
-        return nil
+        exit
       else      
         return environment
       end

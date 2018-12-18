@@ -43,10 +43,13 @@ strings:
         notfound: |-
           Not activating %{env}, as the environment path %{envp} was not found.
           Activate an existing environment instead, e.g.
-          vagrant activate {{ ENV_NAME }}
+          vagrant environment activate {{ ENV_NAME }}
       uninitialized: |-
           You have not yet initilized the environment %{env}
-          Run `vagrant environment init %{env}`
+          You will most likely see only the default vagrant status as a result.
+          Run `vagrant environment init %{env}` to get things working as expected.
+          Also, please review the README.md file.
+          You'll find instructions on properly initializing your vagrant environment(s).
     definition:
       yaml_syntax: |-
         %s fails yaml syntax check

@@ -103,6 +103,7 @@ def main
         end
   }
 end
+
 # Only invoke the main function if none of our custom commands have been called
 unless $vagrant.commands.noexec.include?(ARGV[0])
   
@@ -127,6 +128,8 @@ unless $vagrant.commands.noexec.include?(ARGV[0])
   else
     begin
       main
+    rescue SystemExit => e
+        $logger.warn("Exiting process.")
     rescue Exception => err
       $logger.error($errors.unhandled % {
         errmessage: err, 
