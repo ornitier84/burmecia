@@ -4,7 +4,7 @@ settings:
     api_version: 2
     require_version: ">= 2.1.0"
     tmpdir: ".vagrant/tmp"
-    separate_dotfile_paths: true
+    separate_dotfile_paths: false
     commands:
       noexec: <%= Dir.glob("lib/commands/*.rb").map { |file| File.basename(file, ".rb") } %>
       adhoc: 
