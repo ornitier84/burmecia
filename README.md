@@ -1,3 +1,26 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Introduction](#introduction)
+- [Preflight](#preflight)
+- [Quick start](#quick-start)
+- [Common tasks](#common-tasks)
+  - [SSH](#ssh)
+  - [Power Off](#power-off)
+  - [Provisionment](#provisionment)
+    - [Ansible](#ansible)
+- [The Environments](#the-environments)
+- [Machine Definitions](#machine-definitions)
+- [Provisioners](#provisioners)
+- [Appendix](#appendix)
+  - [Project Settings](#project-settings)
+  - [Softwares](#softwares)
+  - [Troubleshooting](#troubleshooting)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Introduction
 
 What is vagrant-venv?
