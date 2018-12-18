@@ -31,7 +31,7 @@ The above will provide appropriate program shortcuts for a much better commandli
 
 # Quick start
 
-Once you've installed the [requirements](#pre_flight), do as follows:
+Once you've installed the [requirements](#preflight), do as follows:
 
 Activate the sample environment:
 
@@ -42,7 +42,7 @@ Activate the sample environment:
 ```
 
 Initialize the environment inventory file:
-```bash
+```
     $ vagrant Initialize contoso
     Initializing config for environment contoso
     Initializing environment keys for environment contoso
@@ -51,7 +51,7 @@ Initialize the environment inventory file:
 
 Create the environment inventory file:
 
-```bash
+```
     $ vagrant inventory create contoso
     Writing inventory file environments/contoso/inventory.yaml
     Done!    
@@ -78,29 +78,35 @@ Start the your virtual machines:
 
 # Common tasks
 
-- SSH into a virtual machine
-  - `vagrant ssh {{ MACHINE_NAME }}`<br />
-  e.g. `vagrant ssh ansible.contoso.com`
-- Power Off a virtual machine
-  - `vagrant halt {{ MACHINE_NAME }}`
-- Apply provisionment steps (ansible) against virtual machine
-  - `vagrant provision {{ MACHINE_NAME }}`<br />
-  e.g. `vagrant provision web01.contoso.com ansible.contoso.com`
+## SSH
 
+To SSH into a virtual machine: `vagrant ssh {{ MACHINE_NAME }}`
+
+e.g. `vagrant ssh ansible.contoso.com`
+
+## Power Off
+
+To power off a virtual machine: `vagrant halt {{ MACHINE_NAME }}`
+
+## Provisionment 
+
+### Ansible
+
+Apply ansible provisionment steps against a virtual machine:<br />
+`vagrant provision {{ MACHINE_NAME }} {{ ANSIBLE_CONTROLLER }}`<br />
+e.g. `vagrant provision web01.contoso.com ansible.contoso.com`
 
 **Note:** The order of machine names matters when the _ansible_ operational mode is set to 'controller', which is the project default.
 
 As such, the ansible controller node for the environment in question must always be specified last.
 
-In such a call, any ansible tasks will not execute against the ansible controller itself.
+Also note that in such a call, any ansible tasks will not execute against the ansible controller itself.
 
-To invoke ansible tasks against the ansible controller, simply call vagrant provision with the controller name, as with: `vagrant provision ansible.contoso.com`
+To include the ansible controller in the provisionment steps, you must specify the --include-controller flag in your invocation, as with: `vagrant --include-controller provision ansible.contoso.com`
 
 For more detailed information on the project's provisioner logic, consult [docs/provisioners.md](docs/provisioners.md)
 
 For more usage examples, read [docs/usage.md](docs/usage.md)
-
-The following sections cover the project details at greater length.
 
 # The Environments
 
@@ -119,7 +125,6 @@ environments
 | | |____host_vars
 | | | |ansible.contoso.com.yaml
 | | | |web01.contoso.com.yaml
-| | |____inventory.yaml
 | | |____machines
 | | | |____ansible-controllers
 | | | | |____ansible.contoso.com.yaml
@@ -160,7 +165,7 @@ A machine definition consists of a yaml-formatted text file with at minimum the 
 
 Notice the dynamic values encased in `<%= %>`.
 
-This is embedded ruby, and is evaluated as per ERB syntax.
+This is embedded ruby [ERB](https://ruby-doc.org/stdlib-2.5.3/libdoc/erb/rdoc/ERB.html), and is evaluated as per ERB syntax.
 
 For example, `'<%= @machine_name %>'` ultimately evaluates to intended name of the virtual machine.
 
@@ -209,8 +214,8 @@ This repository utilizes the below software:
 ## Troubleshooting
 
 Error_similar_to: `found unknown escape character while parsing a quoted scalar at line {{ someline }} column {{ somecolumn }}`
-Possible_cause: **You set your VAGRANT_DOTFILE_PATH environment variable as .vagrant\myenvironment which causes a failure in parsing the yaml config file**
-Possible_solution: **Escape the backslash in your path as follows: set VAGRANT_DOTFILE_PATH=.vagrant\\myenvironment**
+  Possible_cause: **You set your VAGRANT_DOTFILE_PATH environment variable as .vagrant\myenvironment which causes a failure in parsing the yaml config file**
+  Possible_solution: **Escape the backslash in your path as follows: set VAGRANT_DOTFILE_PATH=.vagrant\\myenvironment**
 
 ## License
 
