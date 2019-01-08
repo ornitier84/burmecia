@@ -1,0 +1,28 @@
+# last_run
+date: "{{ lookup( 'pipe', 'date +%Y-%m-%d-%H-%M' ) }}"
+
+# dns
+dns1: "8.8.8.8"
+pri_domain_name: 'contoso.com'
+etc_hosts_add_all_hosts: true
+etc_hosts_pri_dns_name: '{{ pri_domain_name }}'
+etc_hosts_static_ip: true
+
+foo: "bar"
+
+# vagrant-specific
+# provisioners_root_dir: '{{ ("." if ( is_windows is not defined | bool) ) | bool }}'
+provisioners_root_dir: "."
+
+
+# users who get SSH access to our servers
+sshusers:
+  - admin
+
+sshgroups:
+  - admin
+  - wheel
+
+top_vars:
+  name: "Top-level Vars"
+  description: "These vars will be loaded by all - regardless of environment."  

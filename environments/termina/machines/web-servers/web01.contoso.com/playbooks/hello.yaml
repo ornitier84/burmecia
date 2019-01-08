@@ -1,0 +1,4 @@
+- name: debug | Say Hello from the includes playbook
+  debug:
+    msg: |
+      Hello from the included playbook!

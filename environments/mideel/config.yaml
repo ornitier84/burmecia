@@ -1,0 +1,7 @@
+---
+settings:
+  ansible:
+    surrogate: ansible.mideel.local
+    options:
+      global:
+        config_file: <%= (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil ? :'/vagrant' : :'.' %>/ansible.cfg    

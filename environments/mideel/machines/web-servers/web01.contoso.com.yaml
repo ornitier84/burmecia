@@ -1,0 +1,64 @@
+---
+- name: <%= machine_name %>
+  config:
+    boot_timeout: 700
+    box: 'ubuntu/xenial64'
+    hostname: <%= machine_name %>  
+  desktop: False
+  interfaces:
+    - ip: 192.168.122.10
+      auto_config: true
+      method: 'private_network'
+      adapter: 3
+  port_forwards:
+    - guest: 80
+      host: 8080
+  provision: true
+  disks:
+    - size: 20
+      controller: "SATA Controller"
+  synced_folder:
+    root:
+      id: vagrant-root
+      source: ./
+      target: /vagrant  
+    documents:
+      id: documents
+      source: C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\Documents
+      target: /home/vagrant/Documents    
+    git:
+      id: git
+      source: C:\Users\<%= ENV['USER'] || ENV['USERNAME'] %>\git
+      target: /home/vagrant/git  
+  provider:
+    virtualbox:
+      modifyvm:
+        name: <%= machine_name %>
+        natdnshostresolver1: 'on'
+        cpus: 1
+        memory: '512'
+      setextradata:
+        VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1 
+  provisioners:
+    - local: |
+        cmd /c "echo this is a local command on the vagrant controller"
+    - shell: |
+        test $(which python) || apt-get install -y python
+    - ansible:
+        inventory: "./environments/contoso/inventory.yaml"
+        gather_facts: true
+        become: True
+        roles:
+          - role: common/bootstrap
+            become: True
+            become_user: root          
+        tasks:
+          
+          - name: includes | Include the Hello Playbook
+            include_tasks: web01.contoso.com/playbooks/hello.yaml
+            
+          - name: Install apache2
+            apt: 
+              name: apache2 
+              update_cache: yes 
+              state: latest            
